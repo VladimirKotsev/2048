@@ -34,7 +34,7 @@ void printMatrix(int** matrix, size_t size)
 			cout << matrix[row][col] << setw(5);
 		}
 
-		cout << setw(0) << endl << endl;
+		cout << setw(0) << endl;
 	}
 }
 
@@ -50,7 +50,7 @@ void freeMatrix(int** matrix, size_t size)
 
 void clearConsoleRows(size_t numRows)
 {
-	for (size_t i = 0; i < numRows; i++)
+	for (size_t i = 0; i < numRows + 1; i++)
 	{
 		std::cout << "\x1b[A";  //Move cursor up one row
 		std::cout << "\x1b[2K";  //Clear entire line
@@ -83,6 +83,7 @@ void generateSpawnPoint(int** matrix, size_t size, size_t& row, size_t& col)
 
 bool sumPointsOfRows(int** matrix, size_t size)
 {
+	bool isWinner = false;
 	for (size_t row = 0; row < size; row++)
 	{
 		int sum = 0;
@@ -94,9 +95,11 @@ bool sumPointsOfRows(int** matrix, size_t size)
 		matrix[row][0] = sum;
 
 		if (sum == WinningNumber)
-			return true; //game ends;
+			isWinner = true; //game ends
 	}
 
+	if(isWinner)
+		return true; //game ends
 	return false; //game continues
 }
 
@@ -134,7 +137,7 @@ void moveRight(int** matrix, size_t size)
 {
 	for (size_t row = 0; row < size; row++)
 	{
-		for (int col = 1; col < size + 1; col++)
+		for (int col = 2; col < size; col++)
 		{
 			if (matrix[row][col] == matrix[row][col - 1] || (matrix[row][col] == 0 || matrix[row][col - 1] == 0))
 			{
@@ -149,28 +152,32 @@ void moveLeft(int** matrix, size_t size)
 {
 	for (size_t row = 0; row < size; row++)
 	{
-		for (int col = 1; col < size + 1; col++)
+		for (int col = size - 2; col >= 0; col--)
 		{
 			if (matrix[row][col] == matrix[row][col + 1] || (matrix[row][col] == 0 || matrix[row][col + 1] == 0))
 			{
 				matrix[row][col] += matrix[row][col + 1];
-				matrix[row][col + 1] = 0;
+				matrix[row][col - 1] = 0;
 			}
+
+			printMatrix(matrix, size);
+			cout << endl;
 		}
 	}
 }
 
 void gameOn(int** matrix, size_t size)
 {
+	size_t rdmRow, rdmCol;
+	generateSpawnPoint(matrix, size, rdmRow, rdmCol);
+
+	int numberToAdd = rand() % 2 == 0 ? 2 : 4; //ternary operation
+
+	matrix[rdmRow][rdmCol] = numberToAdd;
+	printMatrix(matrix, size);
+
 	while (!sumPointsOfRows(matrix, size))
 	{
-		size_t rdmRow, rdmCol;
-		generateSpawnPoint(matrix, size, rdmRow, rdmCol);
-
-		int numberToAdd = rand() % 2 == 0 ? 2 : 4; //ternary operation
-
-		matrix[rdmRow][rdmCol] = numberToAdd;
-		printMatrix(matrix, size);
 
 		char direction;
 		cin >> direction;
@@ -190,7 +197,15 @@ void gameOn(int** matrix, size_t size)
 				moveRight(matrix, size);
 				break;
 		}
-		clearConsoleRows(size - 2);
+
+		generateSpawnPoint(matrix, size, rdmRow, rdmCol);
+
+		int numberToAdd = rand() % 2 == 0 ? 2 : 4; //ternary operation
+
+		matrix[rdmRow][rdmCol] = numberToAdd;
+		clearConsoleRows(size);
+		printMatrix(matrix, size);
+
 	}
 
 	int score = 0;
@@ -232,6 +247,7 @@ int main()
 			return 0;
 		}
 
+		cout << endl;
 		int** matrix = initializeMatrix(size);
 		gameOn(matrix, size);
 
