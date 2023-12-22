@@ -15,8 +15,8 @@ int** initializeMatrix(size_t size)
 	int** matrix = new int* [size];
 	for (size_t row = 0; row < size; row++)
 	{
-		matrix[row] = new int[size];
-		for (size_t col = 0; col < size; col++)
+		matrix[row] = new int[size + 1];
+		for (size_t col = 0; col < size + 1; col++)
 		{
 			matrix[row][col] = 0;
 		}
@@ -25,16 +25,15 @@ int** initializeMatrix(size_t size)
 	return matrix;
 }
 
-
-
 void printMatrix(int** matrix, size_t size)
 {
 	for (size_t row = 0; row < size; row++)
 	{
-		for (size_t col = 0; col < size; col++)
+		for (size_t col = 1; col < size + 1; col++)
 		{
 			cout << matrix[row][col] << setw(5);
 		}
+
 		cout << setw(0) << endl << endl;
 	}
 }
@@ -51,21 +50,11 @@ void freeMatrix(int** matrix, size_t size)
 
 void clearConsoleRows(size_t numRows)
 {
-	for (size_t i = 0; i < numRows; ++i)
+	for (size_t i = 0; i < numRows; i++)
 	{
 		std::cout << "\x1b[A";  //Move cursor up one row
 		std::cout << "\x1b[2K";  //Clear entire line
 	}
-}
-
-bool isWinner(int** matrix, size_t size)
-{
-	for (size_t row = 0; row < size; row++)
-		for (size_t col = 0; col < size; col++)
-			if (matrix[row][col] == WinningNumber)
-				return true;
-
-	return false;
 }
 
 bool isRowAvaliable(int** matrix, size_t size, size_t row)
@@ -86,18 +75,94 @@ void generateSpawnPoint(int** matrix, size_t size, size_t& row, size_t& col)
 			break;
 	}
 
-
 	col = rand() % size;
 
 	while (matrix[row][col] != 0)
 		col = rand() % size;
 }
 
-void
+bool sumPointsOfRows(int** matrix, size_t size)
+{
+	for (size_t row = 0; row < size; row++)
+	{
+		int sum = 0;
+		for (size_t col = 0; col < size + 1; col++)
+		{
+			sum += matrix[row][col];
+		}
+
+		matrix[row][0] = sum;
+
+		if (sum == WinningNumber)
+			return true; //game ends;
+	}
+
+	return false; //game continues
+}
+
+void moveUp(int** matrix, size_t size)
+{
+	for (size_t col = 1; col < size + 1; col++)
+	{
+		for (int row = size - 2; row >= 0; row--)
+		{
+			if (matrix[row][col] == matrix[row + 1][col] || (matrix[row][col] == 0 || matrix[row + 1][col] == 0))
+			{
+				matrix[row][col] += matrix[row + 1][col];
+				matrix[row + 1][col] = 0;
+			}
+		}
+	}
+}
+
+void moveDown(int** matrix, size_t size)
+{
+	for (size_t col = 1; col < size + 1; col++)
+	{
+		for (int row = 1; row < size; row++)
+		{
+			if (matrix[row][col] == matrix[row - 1][col] || (matrix[row][col] == 0 || matrix[row - 1][col] == 0))
+			{
+				matrix[row][col] += matrix[row - 1][col];
+				matrix[row - 1][col] = 0;
+			}
+		}
+	}
+}
+
+void moveRight(int** matrix, size_t size)
+{
+	for (size_t row = 0; row < size; row++)
+	{
+		for (int col = 1; col < size + 1; col++)
+		{
+			if (matrix[row][col] == matrix[row][col - 1] || (matrix[row][col] == 0 || matrix[row][col - 1] == 0))
+			{
+				matrix[row][col] += matrix[row][col - 1];
+				matrix[row][col - 1] = 0;
+			}
+		}
+	}
+}
+
+void moveLeft(int** matrix, size_t size)
+{
+	for (size_t row = 0; row < size; row++)
+	{
+		for (int col = 1; col < size + 1; col++)
+		{
+			if (matrix[row][col] == matrix[row][col + 1] || (matrix[row][col] == 0 || matrix[row][col + 1] == 0))
+			{
+				matrix[row][col] += matrix[row][col + 1];
+				matrix[row][col + 1] = 0;
+			}
+		}
+	}
+}
 
 void gameOn(int** matrix, size_t size)
 {
-	while (!isWinner(matrix, size))
+	while (!sumPointsOfRows(matrix, size))
 	{
 		size_t rdmRow, rdmCol;
 		generateSpawnPoint(matrix, size, rdmRow, rdmCol);
@@ -109,18 +174,41 @@ void gameOn(int** matrix, size_t size)
 
 		char direction;
 		cin >> direction;
+
+		switch (direction)
+		{
+			case 'w':
+				moveUp(matrix, size);
+				break;
+			case 'a':
+				moveLeft(matrix, size);
+				break;
+			case 's':
+				moveDown(matrix, size);
+				break;
+			case 'd':
+				moveRight(matrix, size);
+				break;
+		}
+		clearConsoleRows(size - 2);
+	}
+
+	int score = 0;
+	for (size_t row = 0; row < size; row++)
+	{
+		score += matrix[row][0];
 	}
 }
 
 int main()
 {
-	char command[12] = "Start game";
-	char nickname[256] = "gfdgd";
+	char command[12] = "";
+	char nickname[256] = "";
 	size_t size = 0;
 
 	cout << "Start game" << endl << "Leaderboard" << endl << "Quit" << endl;
 
-	//cin.getline(command, 12);
+	cin.getline(command, 12);
 
 	if (strcmp(command, "Quit") == 0)
 	{
@@ -132,8 +220,8 @@ int main()
 	}
 	else if (strcmp(command, "Start game") == 0)
 	{
-		//cout << "Enter a nickname: ";
-		//cin.getline(nickname, 256);
+		cout << "Enter a nickname: ";
+		cin.getline(nickname, 256);
 
 		cout << "Enter dimension: ";
 		cin >> size;
