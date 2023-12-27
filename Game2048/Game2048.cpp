@@ -105,14 +105,37 @@ bool sumPointsOfRows(int** matrix, size_t size)
 
 void moveUp(int** matrix, size_t size)
 {
+	int currentRow, currentCol;
 	for (size_t col = 1; col < size + 1; col++)
 	{
-		for (int row = size - 2; row >= 0; row--)
+		currentRow = 0;
+		currentCol = col;
+		for (size_t row = 1; row < size; row++)
 		{
-			if (matrix[row][col] == matrix[row + 1][col] || (matrix[row][col] == 0 || matrix[row + 1][col] == 0))
+			if (matrix[row][col] != 0)
 			{
-				matrix[row][col] += matrix[row + 1][col];
-				matrix[row + 1][col] = 0;
+				if (matrix[row - 1][col] == 0 || matrix[row - 1][col] == matrix[row][col])
+				{
+					if (matrix[currentRow][currentCol] == matrix[row][col])
+					{
+						matrix[currentRow][currentCol] *= 2;
+						matrix[row][col] = 0;
+					}
+					else
+					{
+						if (matrix[currentRow][currentCol] == 0)
+						{
+							matrix[currentRow][currentCol] = matrix[row][col];
+							matrix[row][col] = 0;
+						}
+						else
+						{
+							matrix[++currentRow][currentCol] = matrix[row][col];
+							matrix[row][col] = 0;
+						}
+					}
+				}
+				else currentRow++;
 			}
 		}
 	}
@@ -120,14 +143,36 @@ void moveUp(int** matrix, size_t size)
 
 void moveDown(int** matrix, size_t size)
 {
+	int currentRow, currentCol;
 	for (size_t col = 1; col < size + 1; col++)
 	{
-		for (int row = 1; row < size; row++)
+		currentRow = size - 1, currentCol = col;
+		for (int row = size - 2; row >= 0; row--)
 		{
-			if (matrix[row][col] == matrix[row - 1][col] || (matrix[row][col] == 0 || matrix[row - 1][col] == 0))
+			if (matrix[row][col] != 0)
 			{
-				matrix[row][col] += matrix[row - 1][col];
-				matrix[row - 1][col] = 0;
+				if (matrix[row + 1][col] == 0 || matrix[row + 1][col] == matrix[row][col])
+				{
+					if (matrix[currentRow][currentCol] == matrix[row][col])
+					{
+						matrix[currentRow][currentCol] *= 2;
+						matrix[row][col] = 0;
+					}
+					else
+					{
+						if (matrix[currentRow][currentCol] == 0)
+						{
+							matrix[currentRow][currentCol] = matrix[row][col];
+							matrix[row][col] = 0;
+						}
+						else
+						{
+							matrix[--currentRow][currentCol] = matrix[row][col];
+							matrix[row][col] = 0;
+						}
+					}
+				}
+				else currentRow--;
 			}
 		}
 	}
@@ -135,14 +180,36 @@ void moveDown(int** matrix, size_t size)
 
 void moveRight(int** matrix, size_t size)
 {
+	int currentRow, currentCol;
 	for (size_t row = 0; row < size; row++)
 	{
-		for (int col = 2; col < size; col++)
+		currentRow = row, currentCol = size;
+		for (int col = size; col >= 1; col--)
 		{
-			if (matrix[row][col] == matrix[row][col - 1] || (matrix[row][col] == 0 || matrix[row][col - 1] == 0))
+			if (matrix[row][col] != 0)
 			{
-				matrix[row][col] += matrix[row][col - 1];
-				matrix[row][col - 1] = 0;
+				if (matrix[row][col + 1] == 0 || matrix[row][col + 1] == matrix[row][col])
+				{
+					if (matrix[currentRow][currentCol] == matrix[row][col])
+					{
+						matrix[currentRow][currentCol] *= 2;
+						matrix[row][col] = 0;
+					}
+					else
+					{
+						if (matrix[currentRow][currentCol] == 0)
+						{
+							matrix[currentRow][currentCol] = matrix[row][col];
+							matrix[row][col] = 0;
+						}
+						else
+						{
+							matrix[currentRow][--currentCol] = matrix[row][col];
+							matrix[row][col] = 0;
+						}
+					}
+				}
+				else currentCol--;
 			}
 		}
 	}
@@ -150,18 +217,37 @@ void moveRight(int** matrix, size_t size)
 
 void moveLeft(int** matrix, size_t size)
 {
+	int currentRow, currentCol;
 	for (size_t row = 0; row < size; row++)
 	{
-		for (int col = size - 2; col >= 0; col--)
+		currentRow = row, currentCol = 1;
+		for (size_t col = 2;col < size + 1; col++)
 		{
-			if (matrix[row][col] == matrix[row][col + 1] || (matrix[row][col] == 0 || matrix[row][col + 1] == 0))
+			if (matrix[row][col] != 0)
 			{
-				matrix[row][col] += matrix[row][col + 1];
-				matrix[row][col - 1] = 0;
+				if (matrix[row][col - 1] == 0 || matrix[row][col - 1] == matrix[row][col])
+				{
+					if (matrix[currentRow][currentCol] == matrix[row][col])
+					{
+						matrix[currentRow][currentCol] *= 2;
+						matrix[row][col] = 0;
+					}
+					else
+					{
+						if (matrix[currentRow][currentCol] == 0)
+						{
+							matrix[currentRow][currentCol] = matrix[row][col];
+							matrix[row][col] = 0;
+						}
+						else
+						{
+							matrix[currentRow][++currentCol] = matrix[row][col];
+							matrix[row][col] = 0;
+						}
+					}
+				}
+				else currentCol++;
 			}
-
-			printMatrix(matrix, size);
-			cout << endl;
 		}
 	}
 }
@@ -203,7 +289,8 @@ void gameOn(int** matrix, size_t size)
 		int numberToAdd = rand() % 2 == 0 ? 2 : 4; //ternary operation
 
 		matrix[rdmRow][rdmCol] = numberToAdd;
-		clearConsoleRows(size);
+		//clearConsoleRows(size);
+		cout << "---------------------------------" << endl;
 		printMatrix(matrix, size);
 
 	}
@@ -260,4 +347,3 @@ int main()
 	}
 
 }
-
