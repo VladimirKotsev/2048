@@ -3,7 +3,32 @@
 #include <cstdlib>
 using namespace std;
 
+#define RESET       "\033[0m"
+#define LIGHT_ORANGE  "\033[38;5;224m"  // Light shade of orange
+#define ORANGE        "\033[38;5;202m"  // Orange
+#define DARK_ORANGE   "\033[38;5;166m"  // Dark shade of orange
+#define LIGHT_RED     "\033[91m"        // Light shade of red
+#define RED           "\033[31m"        // Red
+#define DARK_RED      "\033[38;5;88m"   // Dark shade of red
+#define LIGHT_YELLOW    "\033[38;5;228m"  // Light shade of yellow
+#define YELLOW          "\033[93m"        // Yellow
+#define DARK_YELLOW     "\033[38;5;136m"  // Dark shade of yellow
+const char* colors[] = { LIGHT_ORANGE, ORANGE, DARK_ORANGE, LIGHT_RED
+						 ,RED, DARK_RED, LIGHT_YELLOW, YELLOW, DARK_YELLOW };
+
 constexpr int WinningNumber = 2048;
+
+int logFunc(int num)
+{
+	int result = 0;
+	while (num != 2)
+	{
+		num >>= 1;
+		result++;
+	}
+
+	return result;
+}
 
 bool isDimensionValid(int n)
 {
@@ -31,10 +56,20 @@ void printMatrix(int** matrix, size_t size)
 	{
 		for (size_t col = 1; col < size + 1; col++)
 		{
-			cout << matrix[row][col] << setw(5);
+			cout << setw(4);
+			if (matrix[row][col] == 0)
+				cout << ' ';
+			else
+			{
+				int number = matrix[row][col];
+				int colorIndex = logFunc(number);
+
+				cout << colors[colorIndex] << setw(4) << matrix[row][col] << RESET;
+			}
+			cout << '|';
 		}
 
-		cout << setw(0) << endl;
+		cout << endl;
 	}
 }
 
@@ -98,7 +133,7 @@ bool sumPointsOfRows(int** matrix, size_t size)
 			isWinner = true; //game ends
 	}
 
-	if(isWinner)
+	if (isWinner)
 		return true; //game ends
 	return false; //game continues
 }
@@ -183,7 +218,7 @@ void moveRight(int** matrix, size_t size)
 	int currentRow, currentCol;
 	for (size_t row = 0; row < size; row++)
 	{
-		currentRow = row, currentCol = size;
+		currentRow = row, currentCol = size + 1;
 		for (int col = size; col >= 1; col--)
 		{
 			if (matrix[row][col] != 0)
@@ -270,18 +305,18 @@ void gameOn(int** matrix, size_t size)
 
 		switch (direction)
 		{
-			case 'w':
-				moveUp(matrix, size);
-				break;
-			case 'a':
-				moveLeft(matrix, size);
-				break;
-			case 's':
-				moveDown(matrix, size);
-				break;
-			case 'd':
-				moveRight(matrix, size);
-				break;
+		case 'w':
+			moveUp(matrix, size);
+			break;
+		case 'a':
+			moveLeft(matrix, size);
+			break;
+		case 's':
+			moveDown(matrix, size);
+			break;
+		case 'd':
+			moveRight(matrix, size);
+			break;
 		}
 
 		generateSpawnPoint(matrix, size, rdmRow, rdmCol);
@@ -289,9 +324,8 @@ void gameOn(int** matrix, size_t size)
 		int numberToAdd = rand() % 2 == 0 ? 2 : 4; //ternary operation
 
 		matrix[rdmRow][rdmCol] = numberToAdd;
-		//clearConsoleRows(size);
-		cout << "---------------------------------" << endl;
-		printMatrix(matrix, size);
+		clearConsoleRows(size); //erases game board from last move
+		printMatrix(matrix, size); //prints the game board
 
 	}
 
