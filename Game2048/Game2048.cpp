@@ -3,16 +3,16 @@
 #include <cstdlib>
 using namespace std;
 
-#define RESET       "\033[0m"
-#define LIGHT_ORANGE  "\033[38;5;224m"  // Light shade of orange
-#define ORANGE        "\033[38;5;202m"  // Orange
-#define DARK_ORANGE   "\033[38;5;166m"  // Dark shade of orange
-#define LIGHT_RED     "\033[91m"        // Light shade of red
-#define RED           "\033[31m"        // Red
-#define DARK_RED      "\033[38;5;88m"   // Dark shade of red
-#define LIGHT_YELLOW    "\033[38;5;228m"  // Light shade of yellow
-#define YELLOW          "\033[93m"        // Yellow
-#define DARK_YELLOW     "\033[38;5;136m"  // Dark shade of yellow
+const char* RESET = "\033[0m";
+const char* LIGHT_ORANGE = "\033[38;5;224m"; // Light shade of orange
+const char* ORANGE = "\033[38;5;202m";  // Orange
+const char* DARK_ORANGE = "\033[38;5;166m";  // Dark shade of orange
+const char* LIGHT_RED = "\033[91m"; // Light shade of red
+const char* RED = "\033[31m"; // Red
+const char* DARK_RED = "\033[38;5;88m";   // Dark shade of red
+const char* LIGHT_YELLOW = "\033[38;5;228m";  // Light shade of yellow
+const char* YELLOW = "\033[93m";   // Yellow
+const char* DARK_YELLOW = "\033[38;5;136m";  // Dark shade of yellow
 const char* colors[] = { LIGHT_ORANGE, ORANGE, DARK_ORANGE, LIGHT_RED
 						 ,RED, DARK_RED, LIGHT_YELLOW, YELLOW, DARK_YELLOW };
 
@@ -40,8 +40,8 @@ int** initializeMatrix(size_t size)
 	int** matrix = new int* [size];
 	for (size_t row = 0; row < size; row++)
 	{
-		matrix[row] = new int[size + 1];
-		for (size_t col = 0; col < size + 1; col++)
+		matrix[row] = new int[size];
+		for (size_t col = 0; col < size; col++)
 		{
 			matrix[row][col] = 0;
 		}
@@ -54,9 +54,9 @@ void printMatrix(int** matrix, size_t size)
 {
 	for (size_t row = 0; row < size; row++)
 	{
-		for (size_t col = 1; col < size + 1; col++)
+		for (size_t col = 0; col < size; col++)
 		{
-			cout << setw(4);
+			cout << setw(5);
 			if (matrix[row][col] == 0)
 				cout << ' ';
 			else
@@ -64,7 +64,7 @@ void printMatrix(int** matrix, size_t size)
 				int number = matrix[row][col];
 				int colorIndex = logFunc(number);
 
-				cout << colors[colorIndex] << setw(4) << matrix[row][col] << RESET;
+				cout << colors[colorIndex] << setw(5) << matrix[row][col] << RESET;
 			}
 			cout << '|';
 		}
@@ -85,10 +85,10 @@ void freeMatrix(int** matrix, size_t size)
 
 void clearConsoleRows(size_t numRows)
 {
-	for (size_t i = 0; i < numRows + 1; i++)
+	for (size_t i = 0; i < numRows; i++)
 	{
-		std::cout << "\x1b[A";  //Move cursor up one row
-		std::cout << "\x1b[2K";  //Clear entire line
+		cout << "\x1b[A";  //Move cursor up one row
+		cout << "\x1b[2K";  //Clear entire line
 	}
 }
 
@@ -99,6 +99,19 @@ bool isRowAvaliable(int** matrix, size_t size, size_t row)
 			return true;
 
 	return false;
+}
+
+bool isGameOver(int** matrix, size_t size)
+{
+	for (size_t row = 0; row < size; row++)
+	{
+		for (size_t col = 0; col < size; col++)
+		{
+			if (matrix[row][col] == 0)
+				return false;  //not a game over
+		}
+	}
+	return true;  //game over
 }
 
 void generateSpawnPoint(int** matrix, size_t size, size_t& row, size_t& col)
@@ -116,32 +129,30 @@ void generateSpawnPoint(int** matrix, size_t size, size_t& row, size_t& col)
 		col = rand() % size;
 }
 
-bool sumPointsOfRows(int** matrix, size_t size)
+void sumScore(int** matrix)
+
+bool sumFinalScore(int** matrix, size_t size, int& score)
 {
 	bool isWinner = false;
+	int sum = 0;
 	for (size_t row = 0; row < size; row++)
 	{
-		int sum = 0;
-		for (size_t col = 0; col < size + 1; col++)
+		sum += matrix[row][0];
+		for (size_t col = 0; col < size; col++)
 		{
-			sum += matrix[row][col];
+			if (matrix[row][col] == 2048)
+				isWinner = true;
 		}
-
-		matrix[row][0] = sum;
-
-		if (sum == WinningNumber)
-			isWinner = true; //game ends
 	}
 
-	if (isWinner)
-		return true; //game ends
-	return false; //game continues
+	return isWinner;
 }
 
-void moveUp(int** matrix, size_t size)
+bool moveUp(int** matrix, size_t size)
 {
+	bool noMatrixChange = true;
 	int currentRow, currentCol;
-	for (size_t col = 1; col < size + 1; col++)
+	for (size_t col = 0; col < size; col++)
 	{
 		currentRow = 0;
 		currentCol = col;
@@ -151,10 +162,12 @@ void moveUp(int** matrix, size_t size)
 			{
 				if (matrix[row - 1][col] == 0 || matrix[row - 1][col] == matrix[row][col])
 				{
+					noMatrixChange = false;
 					if (matrix[currentRow][currentCol] == matrix[row][col])
 					{
 						matrix[currentRow][currentCol] *= 2;
 						matrix[row][col] = 0;
+						//notChanged = false;
 					}
 					else
 					{
@@ -174,12 +187,15 @@ void moveUp(int** matrix, size_t size)
 			}
 		}
 	}
+
+	return noMatrixChange;
 }
 
-void moveDown(int** matrix, size_t size)
+bool moveDown(int** matrix, size_t size)
 {
+	bool noMatrixChange = true;
 	int currentRow, currentCol;
-	for (size_t col = 1; col < size + 1; col++)
+	for (size_t col = 0; col < size; col++)
 	{
 		currentRow = size - 1, currentCol = col;
 		for (int row = size - 2; row >= 0; row--)
@@ -188,6 +204,7 @@ void moveDown(int** matrix, size_t size)
 			{
 				if (matrix[row + 1][col] == 0 || matrix[row + 1][col] == matrix[row][col])
 				{
+					noMatrixChange = false;
 					if (matrix[currentRow][currentCol] == matrix[row][col])
 					{
 						matrix[currentRow][currentCol] *= 2;
@@ -211,20 +228,24 @@ void moveDown(int** matrix, size_t size)
 			}
 		}
 	}
+
+	return noMatrixChange;
 }
 
-void moveRight(int** matrix, size_t size)
+bool moveRight(int** matrix, size_t size)
 {
+	bool noMatrixChange = true;
 	int currentRow, currentCol;
 	for (size_t row = 0; row < size; row++)
 	{
-		currentRow = row, currentCol = size + 1;
-		for (int col = size; col >= 1; col--)
+		currentRow = row, currentCol = size;
+		for (int col = size - 1; col >= 0; col--)
 		{
 			if (matrix[row][col] != 0)
 			{
 				if (matrix[row][col + 1] == 0 || matrix[row][col + 1] == matrix[row][col])
 				{
+					noMatrixChange = false;
 					if (matrix[currentRow][currentCol] == matrix[row][col])
 					{
 						matrix[currentRow][currentCol] *= 2;
@@ -248,20 +269,24 @@ void moveRight(int** matrix, size_t size)
 			}
 		}
 	}
+
+	return noMatrixChange;
 }
 
-void moveLeft(int** matrix, size_t size)
+bool moveLeft(int** matrix, size_t size)
 {
+	bool noMatrixChange = true;
 	int currentRow, currentCol;
 	for (size_t row = 0; row < size; row++)
 	{
-		currentRow = row, currentCol = 1;
-		for (size_t col = 2;col < size + 1; col++)
+		currentRow = row, currentCol = 0;
+		for (size_t col = 1;col < size; col++)
 		{
 			if (matrix[row][col] != 0)
 			{
 				if (matrix[row][col - 1] == 0 || matrix[row][col - 1] == matrix[row][col])
 				{
+					noMatrixChange = false;
 					if (matrix[currentRow][currentCol] == matrix[row][col])
 					{
 						matrix[currentRow][currentCol] *= 2;
@@ -285,7 +310,11 @@ void moveLeft(int** matrix, size_t size)
 			}
 		}
 	}
+
+	return noMatrixChange;
 }
+
+void mainMenu();
 
 void gameOn(int** matrix, size_t size)
 {
@@ -295,28 +324,37 @@ void gameOn(int** matrix, size_t size)
 	int numberToAdd = rand() % 2 == 0 ? 2 : 4; //ternary operation
 
 	matrix[rdmRow][rdmCol] = numberToAdd;
+
 	printMatrix(matrix, size);
 
-	while (!sumPointsOfRows(matrix, size))
+	while (!isGameOver(matrix, size))
 	{
-
 		char direction;
 		cin >> direction;
 
+		bool whileContinue = false;
+		bool illegalMove = false;
 		switch (direction)
 		{
 		case 'w':
-			moveUp(matrix, size);
+			illegalMove = moveUp(matrix, size);
 			break;
 		case 'a':
-			moveLeft(matrix, size);
+			illegalMove = moveLeft(matrix, size);
 			break;
 		case 's':
-			moveDown(matrix, size);
+			illegalMove = moveDown(matrix, size);
 			break;
 		case 'd':
-			moveRight(matrix, size);
+			illegalMove = moveRight(matrix, size);
 			break;
+		default: whileContinue = true;
+			break;
+		}
+		if (whileContinue || illegalMove) // wrong input loops while again
+		{
+			clearConsoleRows(1); //clears last row
+			continue;
 		}
 
 		generateSpawnPoint(matrix, size, rdmRow, rdmCol);
@@ -324,19 +362,26 @@ void gameOn(int** matrix, size_t size)
 		int numberToAdd = rand() % 2 == 0 ? 2 : 4; //ternary operation
 
 		matrix[rdmRow][rdmCol] = numberToAdd;
-		clearConsoleRows(size); //erases game board from last move
+		clearConsoleRows(size + 1); //erases game board from last move
 		printMatrix(matrix, size); //prints the game board
-
 	}
 
 	int score = 0;
-	for (size_t row = 0; row < size; row++)
+	if (sumFinalScore(matrix, size, score)) //print winner message
 	{
-		score += matrix[row][0];
+		cout << "=============== YOU WON! ===============";
+		cout << "Score: " << score;
 	}
+	else //print game over message
+	{
+		cout << "=============== GAME OVER! ===============";
+	}
+
+	clearConsoleRows(size + 3);
+	mainMenu();
 }
 
-int main()
+void mainMenu()
 {
 	char command[12] = "";
 	char nickname[256] = "";
@@ -346,11 +391,7 @@ int main()
 
 	cin.getline(command, 12);
 
-	if (strcmp(command, "Quit") == 0)
-	{
-		return 0;
-	}
-	else if (strcmp(command, "Leaderboard") == 0)
+	if (strcmp(command, "Leaderboard") == 0) //print the current leaderboard
 	{
 		//print the current leaderboard
 	}
@@ -365,19 +406,19 @@ int main()
 		if (!isDimensionValid(size))
 		{
 			cout << "Invalid dimension";
-			return 0;
 		}
 
 		cout << endl;
 		int** matrix = initializeMatrix(size);
 		gameOn(matrix, size);
 
-
 		freeMatrix(matrix, size);
 	}
-	else
-	{
-		return 0;
-	}
+}
 
+int main()
+{
+	mainMenu();
+
+	return 0;
 }
