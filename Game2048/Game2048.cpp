@@ -40,8 +40,8 @@ int** initializeMatrix(size_t size)
 	int** matrix = new int* [size];
 	for (size_t row = 0; row < size; row++)
 	{
-		matrix[row] = new int[size];
-		for (size_t col = 0; col < size; col++)
+		matrix[row] = new int[size + 1];
+		for (size_t col = 0; col < size + 1; col++)
 		{
 			matrix[row][col] = 0;
 		}
@@ -54,7 +54,7 @@ void printMatrix(int** matrix, size_t size)
 {
 	for (size_t row = 0; row < size; row++)
 	{
-		for (size_t col = 0; col < size; col++)
+		for (size_t col = 1; col < size + 1; col++)
 		{
 			cout << setw(5);
 			if (matrix[row][col] == 0)
@@ -94,7 +94,7 @@ void clearConsoleRows(size_t numRows)
 
 bool isRowAvaliable(int** matrix, size_t size, size_t row)
 {
-	for (size_t col = 0; col < size; col++)
+	for (size_t col = 1; col < size + 1; col++)
 		if (matrix[row][col] == 0)
 			return true;
 
@@ -105,7 +105,7 @@ bool isGameOver(int** matrix, size_t size)
 {
 	for (size_t row = 0; row < size; row++)
 	{
-		for (size_t col = 0; col < size; col++)
+		for (size_t col = 1; col < size + 1; col++)
 		{
 			if (matrix[row][col] == 0)
 				return false;  //not a game over
@@ -126,33 +126,75 @@ void generateSpawnPoint(int** matrix, size_t size, size_t& row, size_t& col)
 	col = rand() % size;
 
 	while (matrix[row][col] != 0)
-		col = rand() % size;
+		col = rand() % size + 1;
 }
 
-void sumScore(int** matrix)
-
-bool sumFinalScore(int** matrix, size_t size, int& score)
+void sumScoreByRows(int** matrix, size_t size)
 {
-	bool isWinner = false;
 	int sum = 0;
 	for (size_t row = 0; row < size; row++)
 	{
-		sum += matrix[row][0];
-		for (size_t col = 0; col < size; col++)
+		sum = 0;
+		for (size_t col = 1; col < size + 1; col++)
 		{
-			if (matrix[row][col] == 2048)
-				isWinner = true;
+			sum += matrix[row][col];
+		}
+
+		matrix[row][0] = sum;
+	}
+}
+
+bool isWinner(int** matrix, size_t size)
+{
+	for (size_t row = 0; row < size; row++)
+	{
+		for (size_t col = 1; col < size + 1; col++)
+		{
+			if (matrix[row][col] == WinningNumber)
+				return true;
 		}
 	}
 
-	return isWinner;
+	return false;
+}
+
+int sumFinalScore(int** matrix, size_t size)
+{
+	int score = 0;
+	for (size_t row = 0; row < size; row++)
+		score += matrix[row][0];
+
+	return score;
+}
+
+void resetScore(int** matrix, size_t size)
+{
+	for (size_t row = 0; row < size; row++)
+	{
+		matrix[row][0] = 0;
+	}
+}
+
+void sumInMatrixByRow(int** matrix, size_t size, size_t row)
+{
+	matrix[row][0] = 0;
+	for (size_t col = 1; col < size + 1; col++)
+		matrix[row][0] += matrix[row][col];
+}
+
+void sumInMatrixByCol(int** matrix, size_t size, size_t col)
+{
+	for (size_t row = 0; row < size; row++)
+		matrix[row][0] = matrix[row][col];
 }
 
 bool moveUp(int** matrix, size_t size)
 {
 	bool noMatrixChange = true;
 	int currentRow, currentCol;
-	for (size_t col = 0; col < size; col++)
+	//resetScore(matrix, size);
+	sumInMatrixByRow(matrix, size, 0);
+	for (size_t col = 1; col < size + 1; col++)
 	{
 		currentRow = 0;
 		currentCol = col;
@@ -166,25 +208,39 @@ bool moveUp(int** matrix, size_t size)
 					if (matrix[currentRow][currentCol] == matrix[row][col])
 					{
 						matrix[currentRow][currentCol] *= 2;
+
+						matrix[currentRow][0] += matrix[row][col];
+						matrix[row][0] -= matrix[row][col];
+
 						matrix[row][col] = 0;
-						//notChanged = false;
 					}
 					else
 					{
 						if (matrix[currentRow][currentCol] == 0)
 						{
 							matrix[currentRow][currentCol] = matrix[row][col];
+
+							matrix[currentRow][0] += matrix[row][col];
+							matrix[row][0] -= matrix[row][col];
+
 							matrix[row][col] = 0;
 						}
 						else
 						{
 							matrix[++currentRow][currentCol] = matrix[row][col];
+
+							matrix[currentRow][0] += matrix[row][col];
+							matrix[row][0] -= matrix[row][col];
+
 							matrix[row][col] = 0;
 						}
 					}
 				}
 				else currentRow++;
 			}
+
+			if (matrix[row][0] < 0)
+				matrix[row][0] = 0;
 		}
 	}
 
@@ -195,7 +251,8 @@ bool moveDown(int** matrix, size_t size)
 {
 	bool noMatrixChange = true;
 	int currentRow, currentCol;
-	for (size_t col = 0; col < size; col++)
+	sumInMatrixByRow(matrix, size, size - 1);
+	for (size_t col = 1; col < size + 1; col++)
 	{
 		currentRow = size - 1, currentCol = col;
 		for (int row = size - 2; row >= 0; row--)
@@ -208,6 +265,10 @@ bool moveDown(int** matrix, size_t size)
 					if (matrix[currentRow][currentCol] == matrix[row][col])
 					{
 						matrix[currentRow][currentCol] *= 2;
+
+						matrix[currentRow][0] += matrix[row][col];
+						matrix[row][0] -= matrix[row][col];
+
 						matrix[row][col] = 0;
 					}
 					else
@@ -215,17 +276,28 @@ bool moveDown(int** matrix, size_t size)
 						if (matrix[currentRow][currentCol] == 0)
 						{
 							matrix[currentRow][currentCol] = matrix[row][col];
+
+							matrix[currentRow][0] += matrix[row][col];
+							matrix[row][0] -= matrix[row][col];
+
 							matrix[row][col] = 0;
 						}
 						else
 						{
 							matrix[--currentRow][currentCol] = matrix[row][col];
+
+							matrix[currentRow][0] += matrix[row][col];
+							matrix[row][0] -= matrix[row][col];
+
 							matrix[row][col] = 0;
 						}
 					}
 				}
 				else currentRow--;
 			}
+
+			if (matrix[row][0] < 0)
+				matrix[row][0] = 0;
 		}
 	}
 
@@ -236,10 +308,11 @@ bool moveRight(int** matrix, size_t size)
 {
 	bool noMatrixChange = true;
 	int currentRow, currentCol;
+	//sumInMatrixByCol(matrix, size, size + 1);
 	for (size_t row = 0; row < size; row++)
 	{
-		currentRow = row, currentCol = size;
-		for (int col = size - 1; col >= 0; col--)
+		currentRow = row, currentCol = size + 1;
+		for (int col = size; col >= 1; col--)
 		{
 			if (matrix[row][col] != 0)
 			{
@@ -249,6 +322,10 @@ bool moveRight(int** matrix, size_t size)
 					if (matrix[currentRow][currentCol] == matrix[row][col])
 					{
 						matrix[currentRow][currentCol] *= 2;
+
+						//matrix[currentRow][0] += matrix[row][col];
+						//matrix[row][0] -= matrix[row][col];
+
 						matrix[row][col] = 0;
 					}
 					else
@@ -256,17 +333,28 @@ bool moveRight(int** matrix, size_t size)
 						if (matrix[currentRow][currentCol] == 0)
 						{
 							matrix[currentRow][currentCol] = matrix[row][col];
+
+							//matrix[currentRow][0] += matrix[row][col];
+							//matrix[row][0] -= matrix[row][col];
+
 							matrix[row][col] = 0;
 						}
 						else
 						{
 							matrix[currentRow][--currentCol] = matrix[row][col];
+
+							//matrix[currentRow][0] += matrix[row][col];
+							//matrix[row][0] -= matrix[row][col];
+
 							matrix[row][col] = 0;
 						}
 					}
 				}
 				else currentCol--;
 			}
+
+			if (matrix[row][0] < 0)
+				matrix[row][0] = 0;
 		}
 	}
 
@@ -277,10 +365,11 @@ bool moveLeft(int** matrix, size_t size)
 {
 	bool noMatrixChange = true;
 	int currentRow, currentCol;
+	//sumInMatrixByCol(matrix, size, 1);
 	for (size_t row = 0; row < size; row++)
 	{
-		currentRow = row, currentCol = 0;
-		for (size_t col = 1;col < size; col++)
+		currentRow = row, currentCol = 1;
+		for (size_t col = 2; col < size + 1; col++)
 		{
 			if (matrix[row][col] != 0)
 			{
@@ -290,6 +379,10 @@ bool moveLeft(int** matrix, size_t size)
 					if (matrix[currentRow][currentCol] == matrix[row][col])
 					{
 						matrix[currentRow][currentCol] *= 2;
+
+						//matrix[currentRow][0] += matrix[row][col];
+						//matrix[row][0] -= matrix[row][col];
+
 						matrix[row][col] = 0;
 					}
 					else
@@ -297,26 +390,37 @@ bool moveLeft(int** matrix, size_t size)
 						if (matrix[currentRow][currentCol] == 0)
 						{
 							matrix[currentRow][currentCol] = matrix[row][col];
+
+							//matrix[currentRow][0] += matrix[row][col];
+							//matrix[row][0] -= matrix[row][col];
+
 							matrix[row][col] = 0;
 						}
 						else
 						{
 							matrix[currentRow][++currentCol] = matrix[row][col];
+
+							//matrix[currentRow][0] += matrix[row][col];
+							//matrix[row][0] -= matrix[row][col];
+
 							matrix[row][col] = 0;
 						}
 					}
 				}
 				else currentCol++;
 			}
+
+			if (matrix[row][0] < 0)
+				matrix[row][0] = 0;
 		}
 	}
 
 	return noMatrixChange;
 }
 
-void mainMenu();
+int mainMenu();
 
-void gameOn(int** matrix, size_t size)
+int gameOn(int** matrix, size_t size)
 {
 	size_t rdmRow, rdmCol;
 	generateSpawnPoint(matrix, size, rdmRow, rdmCol);
@@ -326,6 +430,9 @@ void gameOn(int** matrix, size_t size)
 	matrix[rdmRow][rdmCol] = numberToAdd;
 
 	printMatrix(matrix, size);
+	sumScoreByRows(matrix, size);
+	int score = sumFinalScore(matrix, size);
+	cout << "Score: " << score << endl << endl;
 
 	while (!isGameOver(matrix, size))
 	{
@@ -348,7 +455,8 @@ void gameOn(int** matrix, size_t size)
 		case 'd':
 			illegalMove = moveRight(matrix, size);
 			break;
-		default: whileContinue = true;
+		default:
+			whileContinue = true;
 			break;
 		}
 		if (whileContinue || illegalMove) // wrong input loops while again
@@ -360,14 +468,17 @@ void gameOn(int** matrix, size_t size)
 		generateSpawnPoint(matrix, size, rdmRow, rdmCol);
 
 		int numberToAdd = rand() % 2 == 0 ? 2 : 4; //ternary operation
-
+		matrix[rdmRow][0] += numberToAdd;
 		matrix[rdmRow][rdmCol] = numberToAdd;
-		clearConsoleRows(size + 1); //erases game board from last move
+
+		clearConsoleRows(size + 3); //erases game board from last move
 		printMatrix(matrix, size); //prints the game board
+
+		score = sumFinalScore(matrix, size);
+		cout << "Score: " << score << endl << endl;
 	}
 
-	int score = 0;
-	if (sumFinalScore(matrix, size, score)) //print winner message
+	if (isWinner(matrix, size)) //print winner message
 	{
 		cout << "=============== YOU WON! ===============";
 		cout << "Score: " << score;
@@ -378,11 +489,14 @@ void gameOn(int** matrix, size_t size)
 	}
 
 	clearConsoleRows(size + 3);
-	mainMenu();
+	freeMatrix(matrix, size);
+	return mainMenu();
 }
 
-void mainMenu()
+int mainMenu()
 {
+	int exitCode = 0;
+
 	char command[12] = "";
 	char nickname[256] = "";
 	size_t size = 0;
@@ -406,19 +520,20 @@ void mainMenu()
 		if (!isDimensionValid(size))
 		{
 			cout << "Invalid dimension";
+			return -1;
 		}
 
 		cout << endl;
 		int** matrix = initializeMatrix(size);
-		gameOn(matrix, size);
+		exitCode = gameOn(matrix, size);
 
 		freeMatrix(matrix, size);
 	}
+
+	return exitCode;
 }
 
 int main()
 {
-	mainMenu();
-
-	return 0;
+	return mainMenu();
 }
