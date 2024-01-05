@@ -123,25 +123,10 @@ void generateSpawnPoint(int** matrix, size_t size, size_t& row, size_t& col)
 			break;
 	}
 
-	col = rand() % size;
+	col = rand() % size + 1;
 
 	while (matrix[row][col] != 0)
 		col = rand() % size + 1;
-}
-
-void sumScoreByRows(int** matrix, size_t size)
-{
-	int sum = 0;
-	for (size_t row = 0; row < size; row++)
-	{
-		sum = 0;
-		for (size_t col = 1; col < size + 1; col++)
-		{
-			sum += matrix[row][col];
-		}
-
-		matrix[row][0] = sum;
-	}
 }
 
 bool isWinner(int** matrix, size_t size)
@@ -167,14 +152,6 @@ int sumFinalScore(int** matrix, size_t size)
 	return score;
 }
 
-void resetScore(int** matrix, size_t size)
-{
-	for (size_t row = 0; row < size; row++)
-	{
-		matrix[row][0] = 0;
-	}
-}
-
 void sumInMatrixByRow(int** matrix, size_t size, size_t row)
 {
 	matrix[row][0] = 0;
@@ -182,17 +159,10 @@ void sumInMatrixByRow(int** matrix, size_t size, size_t row)
 		matrix[row][0] += matrix[row][col];
 }
 
-void sumInMatrixByCol(int** matrix, size_t size, size_t col)
-{
-	for (size_t row = 0; row < size; row++)
-		matrix[row][0] = matrix[row][col];
-}
-
 bool moveUp(int** matrix, size_t size)
 {
 	bool noMatrixChange = true;
 	int currentRow, currentCol;
-	//resetScore(matrix, size);
 	sumInMatrixByRow(matrix, size, 0);
 	for (size_t col = 1; col < size + 1; col++)
 	{
@@ -209,7 +179,7 @@ bool moveUp(int** matrix, size_t size)
 					{
 						matrix[currentRow][currentCol] *= 2;
 
-						matrix[currentRow][0] += matrix[row][col];
+						matrix[currentRow][0] += matrix[row][col]; //changes the score
 						matrix[row][0] -= matrix[row][col];
 
 						matrix[row][col] = 0;
@@ -220,7 +190,7 @@ bool moveUp(int** matrix, size_t size)
 						{
 							matrix[currentRow][currentCol] = matrix[row][col];
 
-							matrix[currentRow][0] += matrix[row][col];
+							matrix[currentRow][0] += matrix[row][col]; //changes the score
 							matrix[row][0] -= matrix[row][col];
 
 							matrix[row][col] = 0;
@@ -229,7 +199,7 @@ bool moveUp(int** matrix, size_t size)
 						{
 							matrix[++currentRow][currentCol] = matrix[row][col];
 
-							matrix[currentRow][0] += matrix[row][col];
+							matrix[currentRow][0] += matrix[row][col]; //changes the score
 							matrix[row][0] -= matrix[row][col];
 
 							matrix[row][col] = 0;
@@ -266,7 +236,7 @@ bool moveDown(int** matrix, size_t size)
 					{
 						matrix[currentRow][currentCol] *= 2;
 
-						matrix[currentRow][0] += matrix[row][col];
+						matrix[currentRow][0] += matrix[row][col]; //changes the score
 						matrix[row][0] -= matrix[row][col];
 
 						matrix[row][col] = 0;
@@ -277,7 +247,7 @@ bool moveDown(int** matrix, size_t size)
 						{
 							matrix[currentRow][currentCol] = matrix[row][col];
 
-							matrix[currentRow][0] += matrix[row][col];
+							matrix[currentRow][0] += matrix[row][col]; //changes the score
 							matrix[row][0] -= matrix[row][col];
 
 							matrix[row][col] = 0;
@@ -286,7 +256,7 @@ bool moveDown(int** matrix, size_t size)
 						{
 							matrix[--currentRow][currentCol] = matrix[row][col];
 
-							matrix[currentRow][0] += matrix[row][col];
+							matrix[currentRow][0] += matrix[row][col]; //changes the score
 							matrix[row][0] -= matrix[row][col];
 
 							matrix[row][col] = 0;
@@ -308,7 +278,6 @@ bool moveRight(int** matrix, size_t size)
 {
 	bool noMatrixChange = true;
 	int currentRow, currentCol;
-	//sumInMatrixByCol(matrix, size, size + 1);
 	for (size_t row = 0; row < size; row++)
 	{
 		currentRow = row, currentCol = size + 1;
@@ -322,10 +291,6 @@ bool moveRight(int** matrix, size_t size)
 					if (matrix[currentRow][currentCol] == matrix[row][col])
 					{
 						matrix[currentRow][currentCol] *= 2;
-
-						//matrix[currentRow][0] += matrix[row][col];
-						//matrix[row][0] -= matrix[row][col];
-
 						matrix[row][col] = 0;
 					}
 					else
@@ -333,19 +298,11 @@ bool moveRight(int** matrix, size_t size)
 						if (matrix[currentRow][currentCol] == 0)
 						{
 							matrix[currentRow][currentCol] = matrix[row][col];
-
-							//matrix[currentRow][0] += matrix[row][col];
-							//matrix[row][0] -= matrix[row][col];
-
 							matrix[row][col] = 0;
 						}
 						else
 						{
 							matrix[currentRow][--currentCol] = matrix[row][col];
-
-							//matrix[currentRow][0] += matrix[row][col];
-							//matrix[row][0] -= matrix[row][col];
-
 							matrix[row][col] = 0;
 						}
 					}
@@ -365,7 +322,6 @@ bool moveLeft(int** matrix, size_t size)
 {
 	bool noMatrixChange = true;
 	int currentRow, currentCol;
-	//sumInMatrixByCol(matrix, size, 1);
 	for (size_t row = 0; row < size; row++)
 	{
 		currentRow = row, currentCol = 1;
@@ -379,10 +335,6 @@ bool moveLeft(int** matrix, size_t size)
 					if (matrix[currentRow][currentCol] == matrix[row][col])
 					{
 						matrix[currentRow][currentCol] *= 2;
-
-						//matrix[currentRow][0] += matrix[row][col];
-						//matrix[row][0] -= matrix[row][col];
-
 						matrix[row][col] = 0;
 					}
 					else
@@ -390,19 +342,11 @@ bool moveLeft(int** matrix, size_t size)
 						if (matrix[currentRow][currentCol] == 0)
 						{
 							matrix[currentRow][currentCol] = matrix[row][col];
-
-							//matrix[currentRow][0] += matrix[row][col];
-							//matrix[row][0] -= matrix[row][col];
-
 							matrix[row][col] = 0;
 						}
 						else
 						{
 							matrix[currentRow][++currentCol] = matrix[row][col];
-
-							//matrix[currentRow][0] += matrix[row][col];
-							//matrix[row][0] -= matrix[row][col];
-
 							matrix[row][col] = 0;
 						}
 					}
@@ -428,10 +372,10 @@ int gameOn(int** matrix, size_t size)
 	int numberToAdd = rand() % 2 == 0 ? 2 : 4; //ternary operation
 
 	matrix[rdmRow][rdmCol] = numberToAdd;
+	matrix[rdmRow][0] += numberToAdd;
 
 	printMatrix(matrix, size);
-	sumScoreByRows(matrix, size);
-	int score = sumFinalScore(matrix, size);
+	int score = numberToAdd;
 	cout << "Score: " << score << endl << endl;
 
 	while (!isGameOver(matrix, size))
@@ -459,6 +403,7 @@ int gameOn(int** matrix, size_t size)
 			whileContinue = true;
 			break;
 		}
+
 		if (whileContinue || illegalMove) // wrong input loops while again
 		{
 			clearConsoleRows(1); //clears last row
@@ -478,17 +423,18 @@ int gameOn(int** matrix, size_t size)
 		cout << "Score: " << score << endl << endl;
 	}
 
+	clearConsoleRows(size + 3);
 	if (isWinner(matrix, size)) //print winner message
 	{
-		cout << "=============== YOU WON! ===============";
-		cout << "Score: " << score;
+		cout << endl << "=============== YOU WON! ===============";
+		cout << endl << "Your score: " << score << endl;
 	}
 	else //print game over message
 	{
-		cout << "=============== GAME OVER! ===============";
+		cout << endl << "=============== GAME OVER! ===============";
+		cout << endl << "Your score: " << score << endl;
 	}
 
-	clearConsoleRows(size + 3);
 	freeMatrix(matrix, size);
 	return mainMenu();
 }
