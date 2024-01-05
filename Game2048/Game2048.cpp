@@ -17,6 +17,33 @@ const char* colors[] = { LIGHT_ORANGE, ORANGE, DARK_ORANGE, LIGHT_RED
 						 ,RED, DARK_RED, LIGHT_YELLOW, YELLOW, DARK_YELLOW };
 
 constexpr int WinningNumber = 2048;
+constexpr int CommandSize = 12;
+constexpr int NicknameSize = 256;
+
+char nickname[NicknameSize] = "";
+size_t timesPlayed = 0;
+
+void printGameName()
+{
+	cout << " .----------------.  .----------------.  .----------------.  .----------------. " << endl;
+	cout << "| .--------------. || .--------------. || .--------------. || .-------------.  |" << endl;
+	cout << "| |    _____     | || |     ____     | || |   _    _     | || |     ____     | |" << endl;
+	cout << "| |   / ___ `.   | || |   .'    '.   | || |  | |  | |    | || |   .' __ '.   | |" << endl;
+	cout << "| |  |_/___) |   | || |  |  .--.  |  | || |  | |__| |_   | || |   | (__) |   | |" << endl;
+	cout << "| |   .'____.'   | || |  | |    | |  | || |  |____   _|  | || |   .`____'.   | |" << endl;
+	cout << "| |  / /____     | || |  |  `--'  |  | || |      _| |_   | || |  | (____) |  | |" << endl;
+	cout << "| |  |_______|   | || |   '.____.'   | || |     |_____|  | || |  `.______.'  | |" << endl;
+	cout << "| |              | || |              | || |              | || |              | |" << endl;
+	cout << "| '--------------' || '--------------' || '--------------' || '--------------' |" << endl;
+	cout << " '----------------'  '----------------'  '----------------'  '----------------' " << endl;
+}
+
+void inputBufferReset()
+{
+	cin.clear(); // clears errors flags from the cin
+	cin.sync();	// discard unread characters from the input buffer
+	cin.ignore(); // discard characters from the input buffer
+}
 
 int logFunc(int num)
 {
@@ -28,6 +55,18 @@ int logFunc(int num)
 	}
 
 	return result;
+}
+
+int myStrcmp(const char* first, const char* second)
+{
+	while ((*first) && (*second) && ((*first) == (*second)))
+	{
+		first++;
+		second++;
+	}
+
+	return (*first - *second);
+
 }
 
 bool isDimensionValid(int n)
@@ -366,13 +405,14 @@ int mainMenu();
 
 int gameOn(int** matrix, size_t size)
 {
+	size_t turnCount = 0;
 	size_t rdmRow, rdmCol;
 	generateSpawnPoint(matrix, size, rdmRow, rdmCol);
 
 	int numberToAdd = rand() % 2 == 0 ? 2 : 4; //ternary operation
 
-	matrix[rdmRow][rdmCol] = numberToAdd;
-	matrix[rdmRow][0] += numberToAdd;
+	matrix[rdmRow][rdmCol] = numberToAdd; //adds the number in the random tile
+	matrix[rdmRow][0] += numberToAdd; //adds to the sum of the row
 
 	printMatrix(matrix, size);
 	int score = numberToAdd;
@@ -380,6 +420,7 @@ int gameOn(int** matrix, size_t size)
 
 	while (!isGameOver(matrix, size))
 	{
+		turnCount++;
 		char direction;
 		cin >> direction;
 
@@ -426,13 +467,13 @@ int gameOn(int** matrix, size_t size)
 	clearConsoleRows(size + 3);
 	if (isWinner(matrix, size)) //print winner message
 	{
-		cout << endl << "=============== YOU WON! ===============";
-		cout << endl << "Your score: " << score << endl;
+		cout << endl << "================== YOU WON! ==================";
+		cout << endl << "Your score: " << score << endl << endl;
 	}
 	else //print game over message
 	{
-		cout << endl << "=============== GAME OVER! ===============";
-		cout << endl << "Your score: " << score << endl;
+		cout << endl << "================== GAME OVER! ==================";
+		cout << endl << "Your score: " << score << endl << endl;
 	}
 
 	freeMatrix(matrix, size);
@@ -441,24 +482,35 @@ int gameOn(int** matrix, size_t size)
 
 int mainMenu()
 {
-	int exitCode = 0;
+	int exitCode = -1;
+	timesPlayed++;
 
-	char command[12] = "";
-	char nickname[256] = "";
+	char command[CommandSize] = "";
 	size_t size = 0;
-
+	cout << "Enter: " << endl;
 	cout << "Start game" << endl << "Leaderboard" << endl << "Quit" << endl;
 
-	cin.getline(command, 12);
+	if (timesPlayed > 1)
+		inputBufferReset();
+	cin.getline(command, CommandSize);
 
-	if (strcmp(command, "Leaderboard") == 0) //print the current leaderboard
+	clearConsoleRows(5);
+
+	if (myStrcmp(command, "Leaderboard") == 0) //print the current leaderboard
 	{
 		//print the current leaderboard
 	}
-	else if (strcmp(command, "Start game") == 0)
+	else if (myStrcmp(command, "Quit") == 0)
 	{
-		cout << "Enter a nickname: ";
-		cin.getline(nickname, 256);
+		return 0;
+	}
+	else if (myStrcmp(command, "Start game") == 0)
+	{
+		if (timesPlayed == 1)
+		{
+			cout << "Enter a nickname: ";
+			cin.getline(nickname, 256);
+		}
 
 		cout << "Enter dimension: ";
 		cin >> size;
@@ -472,8 +524,6 @@ int mainMenu()
 		cout << endl;
 		int** matrix = initializeMatrix(size);
 		exitCode = gameOn(matrix, size);
-
-		freeMatrix(matrix, size);
 	}
 
 	return exitCode;
@@ -481,5 +531,8 @@ int mainMenu()
 
 int main()
 {
+	srand(time(NULL));
+	printGameName();
+
 	return mainMenu();
 }
