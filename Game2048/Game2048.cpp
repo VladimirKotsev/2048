@@ -622,6 +622,7 @@ void readFromLeaderboard(size_t size)
 
 	if (ifs.is_open())
 	{
+		cout << "Leaderboard for size " << size << "x" << size << ":" << endl;
 		for (size_t i = 1; i < TopFive; i++)
 		{
 			ifs.getline(leaderboard, FileLineSize, '\n');
@@ -630,7 +631,7 @@ void readFromLeaderboard(size_t size)
 	}
 
 	ifs.close();
-} 
+}
 
 void swapPlayers(char**& a, char**& b)
 {
@@ -671,23 +672,34 @@ char*** getNewLeaderboard(char* fileName, int score)
 	bool newBest = false;
 	if (ifs.is_open())
 	{
+		char strScore[ScoreLenght];
+		toString(score, strScore);
 		for (size_t i = 1; i < TopFive; i++)
 		{
 			char currLine[FileLineSize];
-			if (!currLine)
-				break;
 			ifs.getline(currLine, FileLineSize, '\n');
-			leaderboard[i] = split(currLine, '-');
-			if (myStrcmp(nickname, leaderboard[i][0]) == 0 && score > convertStrToSigned(leaderboard[i][1]))
+			if (myStrcmp(currLine, "") == 0) // reached empty space ==> always a new best score!
 			{
+				leaderboard[i - 1][0] = nickname;
+				leaderboard[i - 1][1] = strScore;
 				newBest = true;
-				char strScore[];
-				toString(score, strScore);
-				leaderboard[i][1] = strScore;
 				break;
 			}
-			else if(score > convertStrToSigned(leaderboard[i][1]))
+			leaderboard[i] = split(currLine, '-');
+			if (myStrcmp(nickname, leaderboard[i - 1][0]) == 0 && score > convertStrToSigned(leaderboard[i - 1][1])) // if player has played before
+			{
+				leaderboard[i - 1][1] = strScore;
 				newBest = true;
+				break;
+			}
+			else if (score > convertStrToSigned(leaderboard[i - 1][1])) //removes last position(5) and adds the new one
+			{
+				leaderboard[4][0] = nickname;
+				leaderboard[4][1] = strScore;
+				newBest = true;
+				break;
+			}
+
 		}
 	}
 
@@ -699,7 +711,7 @@ char*** getNewLeaderboard(char* fileName, int score)
 	}
 	else
 		return nullptr;
-	
+
 }
 
 bool writeToLeaderboard(size_t size, int score)
@@ -713,10 +725,10 @@ bool writeToLeaderboard(size_t size, int score)
 	if (ofs.is_open())
 	{
 		size_t count = topScoresCount(leaderboard);
-		for (size_t i = 1; i <= count; i++)
+		for (size_t i = 0; i <= count - 1; i++)
 		{
-			ofs.put(i);
-			ofs << ". " << leaderboard[i - 1][0] << "-" << leaderboard[i - 1][1];
+			ofs.put(i + 1);
+			ofs << ". " << leaderboard[i][0] << "-" << leaderboard[i][1];
 			ofs.put('\n');
 		}
 	}
@@ -836,7 +848,6 @@ int mainMenu()
 		cout << "Ender size for leaderboard: ";
 		cin >> size;
 		clearConsoleRows(1);
-		cout << "Leaderboard for size " << size << "x" << size << ":" << endl;
 
 		if (!isDimensionValid(size))
 		{
