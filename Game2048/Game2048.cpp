@@ -24,6 +24,7 @@ constexpr int NicknameSize = 256;
 constexpr int FileLineSize = 30;
 constexpr int FileNameSize = 31;
 constexpr int TopFive = 5;
+constexpr int ScoreLenght = 10;
 
 char nickname[NicknameSize] = "";
 size_t timesPlayed = 0;
@@ -73,6 +74,22 @@ int myStrcmp(const char* first, const char* second)
 	return (*first - *second);
 
 }
+
+size_t topScoresCount(char*** leaderboard)
+{
+	if (leaderboard == nullptr)
+		return 0;
+
+	size_t length = 0;
+	while (*leaderboard != nullptr)
+	{
+		++length;
+		++leaderboard;
+	}
+
+	return length;
+}
+
 void myStrcpy(const char* source, char* dest)
 {
 	if (!source || !dest)
@@ -86,6 +103,141 @@ void myStrcpy(const char* source, char* dest)
 	}
 
 	*dest = '\0';
+}
+
+char getCharFromDigit(int digit)
+{
+	if (digit < 0 || digit > 9)
+		return '\0';
+	return digit + '0';
+}
+
+unsigned getNumberLength(unsigned int n)
+{
+
+	if (n == 0)
+		return 1;
+	unsigned int res = 0;
+
+	while (n != 0)
+	{
+		res++;
+		n /= 10;
+	}
+	return res;
+}
+
+void toString(unsigned int n, char* str)
+{
+	unsigned int len = getNumberLength(n);
+
+	for (int i = len - 1; i >= 0; i--)
+	{
+		str[i] = getCharFromDigit(n % 10);
+		n /= 10;
+	}
+
+	str[len] = '\0';
+}
+
+unsigned countCharOccurences(const char* str, char ch)
+{
+	unsigned count = 0;
+	while (*str)
+	{
+		if (*str == ch)
+			count++;
+		str++;
+	}
+	return count;
+}
+
+unsigned getEndOfTokenIndex(const char* str, unsigned ch)
+{
+	for (int i = 0;; i++)
+	{
+		if (str[i] == '\0' || str[i] == ch)
+			return i;
+	}
+
+	return -1;
+}
+
+void copyNChars(const char* source, char* dest, unsigned N)
+{
+	for (int i = 0; i < N; i++)
+		dest[i] = source[i];
+}
+
+int convertCharToDigit(char ch)
+{
+	if (ch >= '0' && ch <= '9')
+		return ch - '0';
+	return -1;
+}
+
+unsigned convertStrToUnsigned(const char* str)
+{
+	if (!str)
+		return 0;
+
+	unsigned result = 0;
+	while (*str)
+	{
+		int digit = convertCharToDigit(*str);
+		if (digit == -1)
+			return 0;
+		(result *= 10) += digit;
+		str++;
+	}
+	return result;
+}
+
+int convertStrToSigned(const char* str)
+{
+	if (!str)
+		return 0;
+
+	if (*str == '-')
+		return -1 * convertStrToUnsigned(str + 1);
+	else
+		return convertStrToUnsigned(str);
+}
+
+char** split(const char* str, char separator)
+{
+	unsigned resultSize = countCharOccurences(str, separator) + 2;
+	char** result = new char* [resultSize];
+	result[resultSize - 1] = nullptr; //the sentinel
+	unsigned resultIndex = 0;
+
+	while (*str)
+	{
+		int sepIndex = getEndOfTokenIndex(str, separator);
+
+		char* currentToken = new char[sepIndex + 1];
+		currentToken[sepIndex] = '\0'; //the string sentinel
+
+		copyNChars(str, currentToken, sepIndex);
+		str += sepIndex; //skip the token
+
+		result[resultIndex++] = currentToken;
+
+		if (*str == separator)
+			str++;
+	}
+
+	return result;
+}
+
+void freeLeaderboard(char*** leaderboard)
+{
+	for (int i = 0; leaderboard[i] != nullptr; i++)
+	{
+		delete[] leaderboard[0];
+		delete[] leaderboard[1];
+	}
+	delete[] leaderboard;
 }
 
 bool isDimensionValid(int n)
@@ -478,41 +630,102 @@ void readFromLeaderboard(size_t size)
 	}
 
 	ifs.close();
+} 
+
+void swapPlayers(char**& a, char**& b)
+{
+	char** temp = a;
+	a = b;
+	b = temp;
 }
 
-bool isNewBestScore(char* fileName)
+void sortLeaderboard(char*** leaderboard)
 {
-	char leaderboard[FileLineSize];
+	size_t count = topScoresCount(leaderboard);
+	unsigned lastSwapedIndex = count - 1;
+
+	for (int i = 0; i < count - 1; i++)
+	{
+		int currentIterLastSwapped = 0;
+		for (int j = 0; j < lastSwapedIndex; j++)
+		{
+			if (leaderboard[j][1] > leaderboard[j + 1][1])
+			{
+				swapPlayers(leaderboard[j], leaderboard[j + 1]);
+				currentIterLastSwapped = j;
+			}
+		}
+
+		if (currentIterLastSwapped == 0)
+			return;
+
+		lastSwapedIndex = currentIterLastSwapped;
+	}
+}
+
+char*** getNewLeaderboard(char* fileName, int score)
+{
+	char** leaderboard[FileLineSize];
 	ifstream ifs(fileName);
 
+	bool newBest = false;
 	if (ifs.is_open())
 	{
 		for (size_t i = 1; i < TopFive; i++)
 		{
-			ifs.getline(leaderboard, FileLineSize, '\n');
-			
+			char currLine[FileLineSize];
+			if (!currLine)
+				break;
+			ifs.getline(currLine, FileLineSize, '\n');
+			leaderboard[i] = split(currLine, '-');
+			if (myStrcmp(nickname, leaderboard[i][0]) == 0 && score > convertStrToSigned(leaderboard[i][1]))
+			{
+				newBest = true;
+				char strScore[];
+				toString(score, strScore);
+				leaderboard[i][1] = strScore;
+				break;
+			}
+			else if(score > convertStrToSigned(leaderboard[i][1]))
+				newBest = true;
 		}
 	}
 
 	ifs.close();
+	if (newBest)
+	{
+		sortLeaderboard(leaderboard);
+		return leaderboard;
+	}
+	else
+		return nullptr;
+	
 }
 
-bool writeToLeaderboard(size_t size)
+bool writeToLeaderboard(size_t size, int score)
 {
-	char* leaderboard[FileLineSize];
 	char* fileName = getLeaderboardFileName(size);
+	char*** leaderboard = getNewLeaderboard(fileName, score);
+	if (!leaderboard)
+		return false;
 
 	ofstream ofs(fileName);
 	if (ofs.is_open())
 	{
-		for (size_t i = 1; i < TopFive; i++)
+		size_t count = topScoresCount(leaderboard);
+		for (size_t i = 1; i <= count; i++)
 		{
-
+			ofs.put(i);
+			ofs << ". " << leaderboard[i - 1][0] << "-" << leaderboard[i - 1][1];
+			ofs.put('\n');
 		}
 	}
 
+	freeLeaderboard(leaderboard);
+
 	ofs.clear(); // изчистваме грешките от потока
 	ofs.close(); // затваряме потока
+	return true;
 }
 
 int mainMenu();
@@ -579,27 +792,24 @@ int gameOn(int** matrix, size_t size)
 		cout << "Score: " << score << endl << endl;
 	}
 
+	bool newBest = false;
 	clearConsoleRows(size + 3);
 	if (isWinner(matrix, size)) //print winner message
 	{
 		clearConsoleRows(6);
 		cout << endl << "================== YOU WON! ==================";
-
-		bool isNewTopScore = false;
-		//char* leaderboard[FileLineSize];
-
-
-		cout << endl << "Your score: " << score << endl << endl;
 	}
 	else //print game over message
 	{
 		clearConsoleRows(6);
 		cout << endl << "================== GAME OVER! ==================";
-
-
-
-		cout << endl << "Your score: " << score << endl << endl;
 	}
+
+	newBest = writeToLeaderboard(size, score);
+	if (newBest)
+		cout << endl << "New best score: " << score << endl << endl;
+	else
+		cout << endl << "Your score: " << score << endl << endl;
 
 	freeMatrix(matrix, size);
 	return mainMenu();
