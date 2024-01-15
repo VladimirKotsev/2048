@@ -1,6 +1,8 @@
-#include <iostream>
+﻿#include <iostream>
 #include <iomanip>
 #include <cstdlib>
+#include <fstream>
+
 using namespace std;
 
 const char* RESET = "\033[0m";
@@ -19,6 +21,9 @@ const char* colors[] = { LIGHT_ORANGE, ORANGE, DARK_ORANGE, LIGHT_RED
 constexpr int WinningNumber = 2048;
 constexpr int CommandSize = 12;
 constexpr int NicknameSize = 256;
+constexpr int FileLineSize = 30;
+constexpr int FileNameSize = 31;
+constexpr int TopFive = 5;
 
 char nickname[NicknameSize] = "";
 size_t timesPlayed = 0;
@@ -67,6 +72,20 @@ int myStrcmp(const char* first, const char* second)
 
 	return (*first - *second);
 
+}
+void myStrcpy(const char* source, char* dest)
+{
+	if (!source || !dest)
+		return;
+
+	while (*source)
+	{
+		*dest = *source;
+		dest++;
+		source++;
+	}
+
+	*dest = '\0';
 }
 
 bool isDimensionValid(int n)
@@ -401,10 +420,106 @@ bool moveLeft(int** matrix, size_t size)
 	return noMatrixChange;
 }
 
+void printInstructions()
+{
+	cout << "  w --> up" << endl;
+	cout << "  a --> left" << endl;
+	cout << "  s --> down" << endl;
+	cout << "  d --> right" << endl << endl;
+}
+
+char* getLeaderboardFileName(size_t size)
+{
+	char leaderboard[FileLineSize];
+	char fileName[FileNameSize];
+
+	switch (size)
+	{
+	case 4:
+		myStrcpy("Leaderboards/Leaderboard_4.txt", fileName);
+		break;
+	case 5:
+		myStrcpy("Leaderboards/Leaderboard_5.txt", fileName);
+		break;
+	case 6:
+		myStrcpy("Leaderboards/Leaderboard_6.txt", fileName);
+		break;
+	case 7:
+		myStrcpy("Leaderboards/Leaderboard_7.txt", fileName);
+		break;
+	case 8:
+		myStrcpy("Leaderboards/Leaderboard_8.txt", fileName);
+		break;
+	case 9:
+		myStrcpy("Leaderboards/Leaderboard_9.txt", fileName);
+		break;
+	case 10:
+		myStrcpy("Leaderboards/Leaderboard_10.txt", fileName);
+		break;
+	}
+
+	return fileName;
+}
+
+void readFromLeaderboard(size_t size)
+{
+	char leaderboard[FileLineSize];
+	char* fileName = getLeaderboardFileName(size);
+
+	ifstream ifs(fileName);
+
+	if (ifs.is_open())
+	{
+		for (size_t i = 1; i < TopFive; i++)
+		{
+			ifs.getline(leaderboard, FileLineSize, '\n');
+			cout << leaderboard << endl;
+		}
+	}
+
+	ifs.close();
+}
+
+bool isNewBestScore(char* fileName)
+{
+	char leaderboard[FileLineSize];
+	ifstream ifs(fileName);
+
+	if (ifs.is_open())
+	{
+		for (size_t i = 1; i < TopFive; i++)
+		{
+			ifs.getline(leaderboard, FileLineSize, '\n');
+			
+		}
+	}
+
+	ifs.close();
+}
+
+bool writeToLeaderboard(size_t size)
+{
+	char* leaderboard[FileLineSize];
+	char* fileName = getLeaderboardFileName(size);
+
+	ofstream ofs(fileName);
+	if (ofs.is_open())
+	{
+		for (size_t i = 1; i < TopFive; i++)
+		{
+
+		}
+	}
+
+	ofs.clear(); // изчистваме грешките от потока
+	ofs.close(); // затваряме потока
+}
+
 int mainMenu();
 
 int gameOn(int** matrix, size_t size)
 {
+	printInstructions();
 	size_t turnCount = 0;
 	size_t rdmRow, rdmCol;
 	generateSpawnPoint(matrix, size, rdmRow, rdmCol);
@@ -467,12 +582,22 @@ int gameOn(int** matrix, size_t size)
 	clearConsoleRows(size + 3);
 	if (isWinner(matrix, size)) //print winner message
 	{
+		clearConsoleRows(6);
 		cout << endl << "================== YOU WON! ==================";
+
+		bool isNewTopScore = false;
+		//char* leaderboard[FileLineSize];
+
+
 		cout << endl << "Your score: " << score << endl << endl;
 	}
 	else //print game over message
 	{
+		clearConsoleRows(6);
 		cout << endl << "================== GAME OVER! ==================";
+
+
+
 		cout << endl << "Your score: " << score << endl << endl;
 	}
 
@@ -498,7 +623,20 @@ int mainMenu()
 
 	if (myStrcmp(command, "Leaderboard") == 0) //print the current leaderboard
 	{
-		//print the current leaderboard
+		cout << "Ender size for leaderboard: ";
+		cin >> size;
+		clearConsoleRows(1);
+		cout << "Leaderboard for size " << size << "x" << size << ":" << endl;
+
+		if (!isDimensionValid(size))
+		{
+			cout << "Invalid dimension";
+			return -1;
+		}
+
+		readFromLeaderboard(size);
+
+		mainMenu();
 	}
 	else if (myStrcmp(command, "Quit") == 0)
 	{
@@ -511,6 +649,8 @@ int mainMenu()
 			cout << "Enter a nickname: ";
 			cin.getline(nickname, 256);
 		}
+		else if (timesPlayed > 1)
+			clearConsoleRows(3);
 
 		cout << "Enter dimension: ";
 		cin >> size;
