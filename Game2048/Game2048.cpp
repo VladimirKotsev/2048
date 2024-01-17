@@ -21,10 +21,12 @@ const char* colors[] = { LIGHT_ORANGE, ORANGE, DARK_ORANGE, LIGHT_RED
 constexpr int WinningNumber = 2048;
 constexpr int CommandSize = 12;
 constexpr int NicknameSize = 256;
-constexpr int FileLineSize = 30;
 constexpr int FileNameSize = 31;
-constexpr int TopFive = 5;
 constexpr int ScoreLenght = 10;
+constexpr int TopFive = 5;
+constexpr int LeaderboardSize = 5;
+constexpr int PlacementSize = 2;
+constexpr int LineSize = 512;
 
 char nickname[NicknameSize] = "";
 size_t timesPlayed = 0;
@@ -72,23 +74,23 @@ int myStrcmp(const char* first, const char* second)
 	}
 
 	return (*first - *second);
-
 }
 
-size_t topScoresCount(char*** leaderboard)
-{
-	if (leaderboard == nullptr)
-		return 0;
-
-	size_t length = 0;
-	while (*leaderboard != nullptr)
-	{
-		++length;
-		++leaderboard;
-	}
-
-	return length;
-}
+//size_t topScoresCount(char*** leaderboard)
+//{
+//	if (leaderboard == nullptr)
+//		return 0;
+//
+//	size_t length = 0;
+//	while (*leaderboard[0] != " ")
+//	{
+//		length++;
+//		leaderboard++;
+//	}
+//
+//
+//	return length;
+//}
 
 void myStrcpy(const char* source, char* dest)
 {
@@ -138,18 +140,6 @@ void toString(unsigned int n, char* str)
 	}
 
 	str[len] = '\0';
-}
-
-unsigned countCharOccurences(const char* str, char ch)
-{
-	unsigned count = 0;
-	while (*str)
-	{
-		if (*str == ch)
-			count++;
-		str++;
-	}
-	return count;
 }
 
 unsigned getEndOfTokenIndex(const char* str, unsigned ch)
@@ -206,9 +196,9 @@ int convertStrToSigned(const char* str)
 
 char** split(const char* str, char separator)
 {
-	unsigned resultSize = countCharOccurences(str, separator) + 2;
+	unsigned resultSize = 2;
 	char** result = new char* [resultSize];
-	result[resultSize - 1] = nullptr; //the sentinel
+
 	unsigned resultIndex = 0;
 
 	while (*str)
@@ -232,11 +222,13 @@ char** split(const char* str, char separator)
 
 void freeLeaderboard(char*** leaderboard)
 {
-	for (int i = 0; leaderboard[i] != nullptr; i++)
+	for (int i = 0; i < LeaderboardSize; ++i)
 	{
-		delete[] leaderboard[0];
-		delete[] leaderboard[1];
+		for (int j = 0; j < PlacementSize; ++j)
+			delete[] leaderboard[i][j];
+		delete[] leaderboard[i];
 	}
+
 	delete[] leaderboard;
 }
 
@@ -258,6 +250,24 @@ int** initializeMatrix(size_t size)
 	}
 
 	return matrix;
+}
+
+char*** initializeLeaderboard()
+{
+	char*** leaderboard = new char** [LeaderboardSize];
+
+	for (int i = 0; i < LeaderboardSize; ++i)
+	{
+		leaderboard[i] = new char* [PlacementSize];
+
+		for (int j = 0; j < PlacementSize; ++j)
+		{
+			leaderboard[i][j] = new char[LineSize];
+			myStrcpy("", leaderboard[i][j]);  // Initialize with a sample string
+		}
+	}
+
+	return leaderboard;
 }
 
 void printMatrix(int** matrix, size_t size)
@@ -582,7 +592,7 @@ void printInstructions()
 
 char* getLeaderboardFileName(size_t size)
 {
-	char leaderboard[FileLineSize];
+	char leaderboard[LeaderboardSize];
 	char fileName[FileNameSize];
 
 	switch (size)
@@ -615,7 +625,7 @@ char* getLeaderboardFileName(size_t size)
 
 void readFromLeaderboard(size_t size)
 {
-	char leaderboard[FileLineSize];
+	char leaderboard[LeaderboardSize];
 	char* fileName = getLeaderboardFileName(size);
 
 	ifstream ifs(fileName);
@@ -625,7 +635,7 @@ void readFromLeaderboard(size_t size)
 		cout << "Leaderboard for size " << size << "x" << size << ":" << endl;
 		for (size_t i = 1; i < TopFive; i++)
 		{
-			ifs.getline(leaderboard, FileLineSize, '\n');
+			ifs.getline(leaderboard, LeaderboardSize, '\n');
 			cout << leaderboard << endl;
 		}
 	}
@@ -642,7 +652,7 @@ void swapPlayers(char**& a, char**& b)
 
 void sortLeaderboard(char*** leaderboard)
 {
-	size_t count = topScoresCount(leaderboard);
+	size_t count = LeaderboardSize;
 	unsigned lastSwapedIndex = count - 1;
 
 	for (int i = 0; i < count - 1; i++)
@@ -666,7 +676,7 @@ void sortLeaderboard(char*** leaderboard)
 
 char*** getNewLeaderboard(char* fileName, int score)
 {
-	char** leaderboard[FileLineSize];
+	char*** leaderboard = initializeLeaderboard();
 	ifstream ifs(fileName);
 
 	bool newBest = false;
@@ -674,10 +684,10 @@ char*** getNewLeaderboard(char* fileName, int score)
 	{
 		char strScore[ScoreLenght];
 		toString(score, strScore);
-		for (size_t i = 1; i < TopFive; i++)
+		for (size_t i = 1; i <= TopFive; i++)
 		{
-			char currLine[FileLineSize];
-			ifs.getline(currLine, FileLineSize, '\n');
+			char currLine[LineSize];
+			ifs.getline(currLine, LineSize, '\n');
 			if (myStrcmp(currLine, "") == 0) // reached empty space ==> always a new best score!
 			{
 				leaderboard[i - 1][0] = nickname;
@@ -685,7 +695,9 @@ char*** getNewLeaderboard(char* fileName, int score)
 				newBest = true;
 				break;
 			}
-			leaderboard[i] = split(currLine, '-');
+			char** currPLayer = split(currLine, '-');
+			leaderboard[i - 1][0] = currPLayer[0];
+			leaderboard[i - 1][1] = currPLayer[1];
 			if (myStrcmp(nickname, leaderboard[i - 1][0]) == 0 && score > convertStrToSigned(leaderboard[i - 1][1])) // if player has played before
 			{
 				leaderboard[i - 1][1] = strScore;
@@ -724,9 +736,13 @@ bool writeToLeaderboard(size_t size, int score)
 	ofstream ofs(fileName);
 	if (ofs.is_open())
 	{
-		size_t count = topScoresCount(leaderboard);
-		for (size_t i = 0; i <= count - 1; i++)
+		for (size_t i = 0; i < TopFive; i++)
 		{
+			if (leaderboard[i][0] == "")
+			{
+				break;
+			}
+			
 			ofs.put(i + 1);
 			ofs << ". " << leaderboard[i][0] << "-" << leaderboard[i][1];
 			ofs.put('\n');
@@ -871,7 +887,7 @@ int mainMenu()
 			cin.getline(nickname, 256);
 		}
 		else if (timesPlayed > 1)
-			clearConsoleRows(3);
+			clearConsoleRows(1);
 
 		cout << "Enter dimension: ";
 		cin >> size;
