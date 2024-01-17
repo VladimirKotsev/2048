@@ -5,6 +5,7 @@
 
 using namespace std;
 
+//ANSI escape codes for coloring console
 const char* RESET = "\033[0m";
 const char* LIGHT_ORANGE = "\033[38;5;224m"; // Light shade of orange
 const char* ORANGE = "\033[38;5;202m";  // Orange
@@ -18,6 +19,7 @@ const char* DARK_YELLOW = "\033[38;5;136m";  // Dark shade of yellow
 const char* colors[] = { LIGHT_ORANGE, ORANGE, DARK_ORANGE, LIGHT_RED
 						 ,RED, DARK_RED, LIGHT_YELLOW, YELLOW, DARK_YELLOW };
 
+constexpr int colorsArraySize = 9;
 constexpr int WinningNumber = 2048;
 constexpr int CommandSize = 12;
 constexpr int NicknameSize = 256;
@@ -63,6 +65,11 @@ int logFunc(int num)
 	}
 
 	return result;
+}
+
+unsigned colorSelector(int n)
+{
+	return n % 9;
 }
 
 int myStrcmp(const char* first, const char* second)
@@ -284,7 +291,7 @@ void printMatrix(int** matrix, size_t size)
 				int number = matrix[row][col];
 				int colorIndex = logFunc(number);
 
-				cout << colors[colorIndex] << setw(5) << matrix[row][col] << RESET;
+				cout << colors[colorSelector(colorIndex)] << setw(5) << matrix[row][col] << RESET;
 			}
 			cout << '|';
 		}
