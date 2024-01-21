@@ -83,22 +83,6 @@ int myStrcmp(const char* first, const char* second)
 	return (*first - *second);
 }
 
-//size_t topScoresCount(char*** leaderboard)
-//{
-//	if (leaderboard == nullptr)
-//		return 0;
-//
-//	size_t length = 0;
-//	while (*leaderboard[0] != " ")
-//	{
-//		length++;
-//		leaderboard++;
-//	}
-//
-//
-//	return length;
-//}
-
 void myStrcpy(const char* source, char* dest)
 {
 	if (!source || !dest)
@@ -283,6 +267,7 @@ void printMatrix(int** matrix, size_t size)
 	{
 		for (size_t col = 1; col < size + 1; col++)
 		{
+			cout << "|";
 			cout << setw(5);
 			if (matrix[row][col] == 0)
 				cout << ' ';
@@ -293,7 +278,7 @@ void printMatrix(int** matrix, size_t size)
 
 				cout << colors[colorSelector(colorIndex)] << setw(5) << matrix[row][col] << RESET;
 			}
-			cout << '|';
+			cout << "| ";
 		}
 
 		cout << endl;
@@ -303,9 +288,7 @@ void printMatrix(int** matrix, size_t size)
 void freeMatrix(int** matrix, size_t size)
 {
 	for (size_t i = 0; i < size; ++i)
-	{
 		delete[] matrix[i];
-	}
 
 	delete[] matrix;
 }
@@ -597,44 +580,34 @@ void printInstructions()
 	cout << "  d --> right" << endl << endl;
 }
 
-char* getLeaderboardFileName(size_t size)
+void readFromLeaderboard(size_t size)
 {
-	char leaderboard[LeaderboardSize];
-	char fileName[FileNameSize];
-
+	const char* fileName = " ";
 	switch (size)
 	{
 	case 4:
-		myStrcpy("Leaderboards/Leaderboard_4.txt", fileName);
+		fileName = "Leaderboards/Leaderboard_4.txt";
 		break;
 	case 5:
-		myStrcpy("Leaderboards/Leaderboard_5.txt", fileName);
+		fileName = "Leaderboards/Leaderboard_5.txt";
 		break;
 	case 6:
-		myStrcpy("Leaderboards/Leaderboard_6.txt", fileName);
+		fileName = "Leaderboards/Leaderboard_6.txt";
 		break;
 	case 7:
-		myStrcpy("Leaderboards/Leaderboard_7.txt", fileName);
+		fileName = "Leaderboards/Leaderboard_7.txt";
 		break;
 	case 8:
-		myStrcpy("Leaderboards/Leaderboard_8.txt", fileName);
+		fileName = "Leaderboards/Leaderboard_8.txt";
 		break;
 	case 9:
-		myStrcpy("Leaderboards/Leaderboard_9.txt", fileName);
+		fileName = "Leaderboards/Leaderboard_9.txt";
 		break;
 	case 10:
-		myStrcpy("Leaderboards/Leaderboard_10.txt", fileName);
+		fileName = "Leaderboards/Leaderboard_10.txt";
 		break;
 	}
-
-	return fileName;
-}
-
-void readFromLeaderboard(size_t size)
-{
-	char leaderboard[LeaderboardSize];
-	char* fileName = getLeaderboardFileName(size);
-
+	
 	ifstream ifs(fileName);
 
 	if (ifs.is_open())
@@ -642,8 +615,13 @@ void readFromLeaderboard(size_t size)
 		cout << "Leaderboard for size " << size << "x" << size << ":" << endl;
 		for (size_t i = 1; i < TopFive; i++)
 		{
-			ifs.getline(leaderboard, LeaderboardSize, '\n');
-			cout << leaderboard << endl;
+			char* currLine = new char[LineSize];
+			ifs.getline(currLine, LineSize, '\n');
+			if (myStrcmp("", currLine) != 0)
+			{ 
+				cout << i << ". " << currLine << endl;
+				break;
+			}
 		}
 	}
 
@@ -681,7 +659,7 @@ void sortLeaderboard(char*** leaderboard)
 	}
 }
 
-char*** getNewLeaderboard(char* fileName, int score)
+char*** getNewLeaderboard(const char* fileName, int score)
 {
 	char*** leaderboard = initializeLeaderboard();
 	ifstream ifs(fileName);
@@ -735,7 +713,32 @@ char*** getNewLeaderboard(char* fileName, int score)
 
 bool writeToLeaderboard(size_t size, int score)
 {
-	char* fileName = getLeaderboardFileName(size);
+	const char* fileName = " ";
+	switch (size)
+	{
+	case 4:
+		fileName = "Leaderboards/Leaderboard_4.txt";
+		break;
+	case 5:
+		fileName = "Leaderboards/Leaderboard_5.txt";
+		break;
+	case 6:
+		fileName = "Leaderboards/Leaderboard_6.txt";
+		break;
+	case 7:
+		fileName = "Leaderboards/Leaderboard_7.txt";
+		break;
+	case 8:
+		fileName = "Leaderboards/Leaderboard_8.txt";
+		break;
+	case 9:
+		fileName = "Leaderboards/Leaderboard_9.txt";
+		break;
+	case 10:
+		fileName = "Leaderboards/Leaderboard_10.txt";
+		break;
+	}
+
 	char*** leaderboard = getNewLeaderboard(fileName, score);
 	if (!leaderboard)
 		return false;
