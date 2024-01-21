@@ -14,6 +14,4 @@ The player can slide numbered tiles in four directions (up, down, left, right). 
 - Score tracking to keep a record of your progress.
 - Score leaderboard for all best scored points for each grid size.
 
-## Getting Started
-
 
