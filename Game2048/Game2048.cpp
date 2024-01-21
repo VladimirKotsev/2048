@@ -34,7 +34,7 @@ char nickname[NicknameSize] = "";
 unsigned int timesPlayed = 0;
 bool welcome = true;
 
-void printGameName()
+void printGameName() //prints logo
 {
 	cout << " .----------------.  .----------------.  .----------------.  .----------------. " << endl;
 	cout << "| .--------------. || .--------------. || .--------------. || .-------------.  |" << endl;
@@ -49,14 +49,14 @@ void printGameName()
 	cout << " '----------------'  '----------------'  '----------------'  '----------------' " << endl;
 }
 
-void inputBufferReset()
+void inputBufferReset() //resets console buffer
 {
 	cin.clear(); // clears errors flags from the cin
 	cin.sync();	// discard unread characters from the input buffer
 	cin.ignore(); // discard characters from the input buffer
 }
 
-int logFunc(int num)
+int logFunc(int num) //resolves a mathematical log
 {
 	int result = 0;
 	while (num != 2)
@@ -68,12 +68,12 @@ int logFunc(int num)
 	return result;
 }
 
-unsigned colorSelector(int n)
+unsigned colorSelector(int n) // color selector for console
 {
 	return n % 9;
 }
 
-int myStrcmp(const char* first, const char* second)
+int myStrcmp(const char* first, const char* second) //comparies two string
 {
 	while ((*first) && (*second) && ((*first) == (*second)))
 	{
@@ -84,7 +84,7 @@ int myStrcmp(const char* first, const char* second)
 	return (*first - *second);
 }
 
-void myStrcpy(const char* source, char* dest)
+void myStrcpy(const char* source, char* dest) //copies from one to another string
 {
 	if (!source || !dest)
 		return;
@@ -99,14 +99,14 @@ void myStrcpy(const char* source, char* dest)
 	*dest = '\0';
 }
 
-char getCharFromDigit(int digit)
+char getCharFromDigit(int digit) //from int to char
 {
 	if (digit < 0 || digit > 9)
 		return '\0';
 	return digit + '0';
 }
 
-unsigned getNumberLength(unsigned int n)
+unsigned getNumberLength(unsigned int n) //gets the length of a number
 {
 
 	if (n == 0)
@@ -121,7 +121,7 @@ unsigned getNumberLength(unsigned int n)
 	return res;
 }
 
-char* toString(unsigned int n)
+char* toString(unsigned int n) //converting from unsigned int to string
 {
 	unsigned int len = getNumberLength(n);
 	char* str = new char[len + 1];
@@ -136,7 +136,7 @@ char* toString(unsigned int n)
 	return str;
 }
 
-unsigned getEndOfTokenIndex(const char* str, unsigned ch)
+unsigned getEndOfTokenIndex(const char* str, unsigned ch) //geting the index of string end
 {
 	for (int i = 0;; i++)
 	{
@@ -147,13 +147,13 @@ unsigned getEndOfTokenIndex(const char* str, unsigned ch)
 	return -1;
 }
 
-void copyNChars(const char* source, char* dest, unsigned N)
+void copyNChars(const char* source, char* dest, unsigned N) // copying from one to another string n characters
 {
 	for (int i = 0; i < N; i++)
 		dest[i] = source[i];
 }
 
-int convertCharToDigit(char ch)
+int convertCharToDigit(char ch) // converting char to digit
 {
 	if (ch >= '0' && ch <= '9')
 		return ch - '0';
@@ -222,12 +222,12 @@ void freeLeaderboard(char*** leaderboard) // preventing memory leak
 	delete[] leaderboard;
 }
 
-bool isDimensionValid(int n)
+bool isDimensionValid(int n) // checks if input size is valid for game
 {
 	return n >= 4 && n <= 10;
 }
 
-int** initializeMatrix(size_t size)
+int** initializeMatrix(size_t size) // initializes game matrix
 {
 	int** matrix = new int* [size];
 	for (size_t row = 0; row < size; row++)
@@ -242,7 +242,7 @@ int** initializeMatrix(size_t size)
 	return matrix;
 }
 
-char*** initializeLeaderboard()
+char*** initializeLeaderboard() // initializes leaderboard when needed
 {
 	char*** leaderboard = new char** [LeaderboardSize];
 
@@ -260,7 +260,7 @@ char*** initializeLeaderboard()
 	return leaderboard;
 }
 
-void printMatrix(int** matrix, size_t size)
+void printMatrix(int** matrix, size_t size) // prints matrix
 {
 	for (size_t row = 0; row < size; row++)
 	{
@@ -284,7 +284,7 @@ void printMatrix(int** matrix, size_t size)
 	}
 }
 
-void freeMatrix(int** matrix, size_t size)
+void freeMatrix(int** matrix, size_t size) // preventing memory leak
 {
 	for (size_t i = 0; i < size; ++i)
 		delete[] matrix[i];
@@ -292,7 +292,7 @@ void freeMatrix(int** matrix, size_t size)
 	delete[] matrix;
 }
 
-void clearConsoleRows(size_t numRows)
+void clearConsoleRows(size_t numRows) // deletes from console by rows
 {
 	for (size_t i = 0; i < numRows; i++)
 	{
@@ -301,7 +301,7 @@ void clearConsoleRows(size_t numRows)
 	}
 }
 
-bool isRowAvaliable(int** matrix, size_t size, size_t row)
+bool isRowAvaliable(int** matrix, size_t size, size_t row) // checks if there is free space for new number to spawn
 {
 	for (size_t col = 1; col < size + 1; col++)
 		if (matrix[row][col] == 0)
@@ -310,7 +310,7 @@ bool isRowAvaliable(int** matrix, size_t size, size_t row)
 	return false;
 }
 
-bool isGameOver(int** matrix, size_t size)
+bool isGameOver(int** matrix, size_t size) // cheks if game has ended
 {
 	for (size_t row = 0; row < size; row++)
 	{
@@ -323,7 +323,7 @@ bool isGameOver(int** matrix, size_t size)
 	return true;  //game over
 }
 
-void generateSpawnPoint(int** matrix, size_t size, size_t& row, size_t& col)
+void generateSpawnPoint(int** matrix, size_t size, size_t& row, size_t& col) // generates spawn point for new number
 {
 	while (true)
 	{
@@ -338,13 +338,13 @@ void generateSpawnPoint(int** matrix, size_t size, size_t& row, size_t& col)
 		col = rand() % size + 1;
 }
 
-bool isWinner(int** matrix, size_t size)
+bool isWinner(int** matrix, size_t size) //checks if user is winner
 {
 	for (size_t row = 0; row < size; row++)
 	{
 		for (size_t col = 1; col < size + 1; col++)
 		{
-			if (matrix[row][col] == WinningNumber)
+			if (matrix[row][col] >= WinningNumber)
 				return true;
 		}
 	}
@@ -352,7 +352,7 @@ bool isWinner(int** matrix, size_t size)
 	return false;
 }
 
-int sumFinalScore(int** matrix, size_t size)
+int sumFinalScore(int** matrix, size_t size) // sums total score
 {
 	int score = 0;
 	for (size_t row = 0; row < size; row++)
@@ -361,14 +361,14 @@ int sumFinalScore(int** matrix, size_t size)
 	return score;
 }
 
-void sumInMatrixByRow(int** matrix, size_t size, size_t row)
+void sumInMatrixByRow(int** matrix, size_t size, size_t row) // sums score for given row
 {
 	matrix[row][0] = 0;
 	for (size_t col = 1; col < size + 1; col++)
 		matrix[row][0] += matrix[row][col];
 }
 
-bool moveUp(int** matrix, size_t size)
+bool moveUp(int** matrix, size_t size) // plays a move up
 {
 	bool noMatrixChange = true;
 	int currentRow, currentCol;
@@ -426,7 +426,7 @@ bool moveUp(int** matrix, size_t size)
 	return noMatrixChange;
 }
 
-bool moveDown(int** matrix, size_t size)
+bool moveDown(int** matrix, size_t size) // plays a move down
 {
 	bool noMatrixChange = true;
 	int currentRow, currentCol;
@@ -483,7 +483,7 @@ bool moveDown(int** matrix, size_t size)
 	return noMatrixChange;
 }
 
-bool moveRight(int** matrix, size_t size)
+bool moveRight(int** matrix, size_t size) // plays a move right
 {
 	bool noMatrixChange = true;
 	int currentRow, currentCol;
@@ -527,7 +527,7 @@ bool moveRight(int** matrix, size_t size)
 	return noMatrixChange;
 }
 
-bool moveLeft(int** matrix, size_t size)
+bool moveLeft(int** matrix, size_t size) // plays a move left
 {
 	bool noMatrixChange = true;
 	int currentRow, currentCol;
@@ -571,7 +571,7 @@ bool moveLeft(int** matrix, size_t size)
 	return noMatrixChange;
 }
 
-void printInstructions()
+void printInstructions() // prints 'how to play' instructions
 {
 	cout << "  w --> up" << endl;
 	cout << "  a --> left" << endl;
@@ -579,7 +579,7 @@ void printInstructions()
 	cout << "  d --> right" << endl << endl;
 }
 
-void readFromLeaderboard(size_t size)
+void readFromLeaderboard(size_t size) // reads leaderboard from files
 {
 	const char* fileName = " ";
 	switch (size)
@@ -626,14 +626,14 @@ void readFromLeaderboard(size_t size)
 	ifs.close();
 }
 
-void swapPlayers(char**& a, char**& b)
+void swapPlayers(char**& a, char**& b) // swaps to players in leaderboard
 {
 	char** temp = a;
 	a = b;
 	b = temp;
 }
 
-void sortLeaderboard(char*** leaderboard)
+void sortLeaderboard(char*** leaderboard) // sorts leaderboard in descending order
 {
 	unsigned lastSwapedIndex = LeaderboardSize - 1;
 
@@ -656,7 +656,7 @@ void sortLeaderboard(char*** leaderboard)
 	}
 }
 
-char*** getNewLeaderboard(const char* fileName, int score)
+char*** getNewLeaderboard(const char* fileName, int score) // reads from file and stores in leaderboard
 {
 	char*** leaderboard = initializeLeaderboard();
 	bool isWritten = false;
@@ -709,7 +709,7 @@ char*** getNewLeaderboard(const char* fileName, int score)
 
 }
 
-bool writeToLeaderboard(size_t size, int score)
+bool writeToLeaderboard(size_t size, int score) // writes new results to file
 {
 	const char* fileName = " ";
 	switch (size)
@@ -761,9 +761,9 @@ bool writeToLeaderboard(size_t size, int score)
 	return true;
 }
 
-int mainMenu();
+int mainMenu(); // initialization
 
-int gameOn(int** matrix, size_t size)
+int gameOn(int** matrix, size_t size) //game logic method
 {
 	printInstructions();
 	size_t turnCount = 0;
