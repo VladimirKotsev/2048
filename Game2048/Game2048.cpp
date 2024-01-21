@@ -31,7 +31,8 @@ constexpr int PlacementSize = 2;
 constexpr int LineSize = 512;
 
 char nickname[NicknameSize] = "";
-size_t timesPlayed = 0;
+unsigned int timesPlayed = 0;
+bool welcome = true;
 
 void printGameName()
 {
@@ -120,9 +121,10 @@ unsigned getNumberLength(unsigned int n)
 	return res;
 }
 
-void toString(unsigned int n, char* str)
+char* toString(unsigned int n)
 {
 	unsigned int len = getNumberLength(n);
+	char* str = new char[len + 1];
 
 	for (int i = len - 1; i >= 0; i--)
 	{
@@ -131,6 +133,7 @@ void toString(unsigned int n, char* str)
 	}
 
 	str[len] = '\0';
+	return str;
 }
 
 unsigned getEndOfTokenIndex(const char* str, unsigned ch)
@@ -216,7 +219,12 @@ void freeLeaderboard(char*** leaderboard)
 	for (int i = 0; i < LeaderboardSize; ++i)
 	{
 		for (int j = 0; j < PlacementSize; ++j)
-			delete[] leaderboard[i][j];
+		{
+			if (leaderboard[i][j] != nullptr)
+			{
+				delete[] leaderboard[i][j];
+			}
+		}
 	}
 
 	delete[] leaderboard;
@@ -253,7 +261,7 @@ char*** initializeLeaderboard()
 		for (int j = 0; j < PlacementSize; ++j)
 		{
 			leaderboard[i][j] = new char[LineSize];
-			myStrcpy("", leaderboard[i][j]);  // Initialize with a sample string
+			myStrcpy("", leaderboard[i][j]); // Initialize with a sample string
 		}
 	}
 
@@ -606,21 +614,20 @@ void readFromLeaderboard(size_t size)
 		fileName = "Leaderboards/Leaderboard_10.txt";
 		break;
 	}
-	
+
 	ifstream ifs(fileName);
 
 	if (ifs.is_open())
 	{
 		cout << "Leaderboard for size " << size << "x" << size << ":" << endl;
-		for (size_t i = 1; i < TopFive; i++)
+		for (size_t i = 1; i <= TopFive; i++)
 		{
 			char* currLine = new char[LineSize];
 			ifs.getline(currLine, LineSize, '\n');
 			if (myStrcmp("", currLine) != 0)
-			{ 
 				cout << i << ". " << currLine << endl;
+			else
 				break;
-			}
 		}
 	}
 
@@ -632,15 +639,6 @@ void swapPlayers(char**& a, char**& b)
 	char** temp = a;
 	a = b;
 	b = temp;
-}
-
-void testMethod(char*** l)
-{
-	cout << endl << l[0][0] << " - " << l[0][1] << endl;
-	cout << l[1][0] << " - " << l[1][1] << endl;
-	cout << l[2][0] << " - " << l[2][1] << endl;
-	cout << l[3][0] << " - " << l[3][1] << endl;
-	cout << l[4][0] << " - " << l[4][1] << endl;
 }
 
 void sortLeaderboard(char*** leaderboard)
@@ -669,18 +667,18 @@ void sortLeaderboard(char*** leaderboard)
 char*** getNewLeaderboard(const char* fileName, int score)
 {
 	char*** leaderboard = initializeLeaderboard();
+	bool isWritten = false;
 	ifstream ifs(fileName);
 
 	bool newBest = false;
 	if (ifs.is_open())
 	{
-		char strScore[ScoreLenght];
-		toString(score, strScore);
+		char* strScore = toString(score);
 		for (size_t i = 1; i <= TopFive; i++)
 		{
 			char currLine[LineSize];
 			ifs.getline(currLine, LineSize, '\n');
-			if (myStrcmp(currLine, "") == 0) // reached empty space ==> always a new best score!
+			if (myStrcmp(currLine, "") == 0 && !isWritten) // reached empty space ==> always a new best score!
 			{
 				leaderboard[i - 1][0] = nickname;
 				leaderboard[i - 1][1] = strScore;
@@ -696,12 +694,12 @@ char*** getNewLeaderboard(const char* fileName, int score)
 				newBest = true;
 				break;
 			}
-			else if (score > convertStrToSigned(leaderboard[i - 1][1])) //removes last position(5) and adds the new one
+			else if (score > convertStrToSigned(leaderboard[i - 1][1]) && !isWritten) //removes last position(5) and adds the new one
 			{
 				leaderboard[4][0] = nickname;
-				leaderboard[4][1] = score;
+				leaderboard[4][1] = strScore;
 				newBest = true;
-				break;
+				isWritten = true;
 			}
 		}
 	}
@@ -710,7 +708,6 @@ char*** getNewLeaderboard(const char* fileName, int score)
 	if (newBest)
 	{
 		sortLeaderboard(leaderboard);
-		testMethod(leaderboard);
 		return leaderboard;
 	}
 	else
@@ -755,18 +752,15 @@ bool writeToLeaderboard(size_t size, int score)
 	{
 		for (size_t i = 0; i < TopFive; i++)
 		{
-			if (leaderboard[i][0] == "")
+			if (myStrcmp("", leaderboard[i][0]) == 0)
 				break;
-			
-			cout << leaderboard[i][0] << "-" << leaderboard[i][1];
+
 			ofs << leaderboard[i][0] << "-" << leaderboard[i][1];
 			ofs.put('\n');
 		}
 	}
 
-
-	//ofs.clear(); // изчистваме грешките от потока
-	ofs.close(); // затваряме потока
+	ofs.close();
 
 	freeLeaderboard(leaderboard); //to check!!
 
@@ -863,14 +857,13 @@ int gameOn(int** matrix, size_t size)
 int mainMenu()
 {
 	int exitCode = -1;
-	timesPlayed++;
 
 	char command[CommandSize] = "";
 	size_t size = 0;
 	cout << "Enter: " << endl;
 	cout << "Start game" << endl << "Leaderboard" << endl << "Quit" << endl;
 
-	if (timesPlayed > 1)
+	if (!welcome)
 		inputBufferReset();
 	cin.getline(command, CommandSize);
 
@@ -878,6 +871,7 @@ int mainMenu()
 
 	if (myStrcmp(command, "Leaderboard") == 0) //print the current leaderboard
 	{
+		welcome = false;
 		cout << "Ender size for leaderboard: ";
 		cin >> size;
 		clearConsoleRows(1);
@@ -898,6 +892,8 @@ int mainMenu()
 	}
 	else if (myStrcmp(command, "Start game") == 0)
 	{
+		welcome = false;
+		timesPlayed++;
 		if (timesPlayed == 1)
 		{
 			cout << "Enter a nickname: ";
