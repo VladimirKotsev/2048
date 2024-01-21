@@ -217,7 +217,6 @@ void freeLeaderboard(char*** leaderboard)
 	{
 		for (int j = 0; j < PlacementSize; ++j)
 			delete[] leaderboard[i][j];
-		delete[] leaderboard[i];
 	}
 
 	delete[] leaderboard;
@@ -635,17 +634,25 @@ void swapPlayers(char**& a, char**& b)
 	b = temp;
 }
 
+void testMethod(char*** l)
+{
+	cout << endl << l[0][0] << " - " << l[0][1] << endl;
+	cout << l[1][0] << " - " << l[1][1] << endl;
+	cout << l[2][0] << " - " << l[2][1] << endl;
+	cout << l[3][0] << " - " << l[3][1] << endl;
+	cout << l[4][0] << " - " << l[4][1] << endl;
+}
+
 void sortLeaderboard(char*** leaderboard)
 {
-	size_t count = LeaderboardSize;
-	unsigned lastSwapedIndex = count - 1;
+	unsigned lastSwapedIndex = LeaderboardSize - 1;
 
-	for (int i = 0; i < count - 1; i++)
+	for (int i = 0; i < LeaderboardSize - 1; i++)
 	{
 		int currentIterLastSwapped = 0;
 		for (int j = 0; j < lastSwapedIndex; j++)
 		{
-			if (leaderboard[j][1] > leaderboard[j + 1][1])
+			if (convertStrToSigned(leaderboard[j][1]) < convertStrToSigned(leaderboard[j + 1][1]))
 			{
 				swapPlayers(leaderboard[j], leaderboard[j + 1]);
 				currentIterLastSwapped = j;
@@ -692,11 +699,10 @@ char*** getNewLeaderboard(const char* fileName, int score)
 			else if (score > convertStrToSigned(leaderboard[i - 1][1])) //removes last position(5) and adds the new one
 			{
 				leaderboard[4][0] = nickname;
-				leaderboard[4][1] = strScore;
+				leaderboard[4][1] = score;
 				newBest = true;
 				break;
 			}
-
 		}
 	}
 
@@ -704,6 +710,7 @@ char*** getNewLeaderboard(const char* fileName, int score)
 	if (newBest)
 	{
 		sortLeaderboard(leaderboard);
+		testMethod(leaderboard);
 		return leaderboard;
 	}
 	else
@@ -749,20 +756,20 @@ bool writeToLeaderboard(size_t size, int score)
 		for (size_t i = 0; i < TopFive; i++)
 		{
 			if (leaderboard[i][0] == "")
-			{
 				break;
-			}
 			
-			ofs.put(i + 1);
-			ofs << ". " << leaderboard[i][0] << "-" << leaderboard[i][1];
+			cout << leaderboard[i][0] << "-" << leaderboard[i][1];
+			ofs << leaderboard[i][0] << "-" << leaderboard[i][1];
 			ofs.put('\n');
 		}
 	}
 
-	freeLeaderboard(leaderboard);
 
-	ofs.clear(); // изчистваме грешките от потока
+	//ofs.clear(); // изчистваме грешките от потока
 	ofs.close(); // затваряме потока
+
+	freeLeaderboard(leaderboard); //to check!!
+
 	return true;
 }
 
