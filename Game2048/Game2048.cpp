@@ -160,7 +160,7 @@ int convertCharToDigit(char ch)
 	return -1;
 }
 
-unsigned convertStrToUnsigned(const char* str)
+unsigned convertStrToUnsigned(const char* str) // converting string to unsigned
 {
 	if (!str)
 		return 0;
@@ -177,7 +177,7 @@ unsigned convertStrToUnsigned(const char* str)
 	return result;
 }
 
-int convertStrToSigned(const char* str)
+int convertStrToSigned(const char* str) // converting str to int
 {
 	if (!str)
 		return 0;
@@ -188,7 +188,7 @@ int convertStrToSigned(const char* str)
 		return convertStrToUnsigned(str);
 }
 
-char** split(const char* str, char separator)
+char** split(const char* str, char separator) // spliting a string with given char seperator
 {
 	unsigned resultSize = 2;
 	char** result = new char* [resultSize];
@@ -214,18 +214,10 @@ char** split(const char* str, char separator)
 	return result;
 }
 
-void freeLeaderboard(char*** leaderboard)
+void freeLeaderboard(char*** leaderboard) // preventing memory leak
 {
 	for (int i = 0; i < LeaderboardSize; ++i)
-	{
-		for (int j = 0; j < PlacementSize; ++j)
-		{
-			if (leaderboard[i][j] != nullptr)
-			{
-				delete[] leaderboard[i][j];
-			}
-		}
-	}
+		delete[] leaderboard[i];
 
 	delete[] leaderboard;
 }
@@ -685,6 +677,8 @@ char*** getNewLeaderboard(const char* fileName, int score)
 				newBest = true;
 				break;
 			}
+			else
+				break;
 			char** currPLayer = split(currLine, '-');
 			leaderboard[i - 1][0] = currPLayer[0];
 			leaderboard[i - 1][1] = currPLayer[1];
